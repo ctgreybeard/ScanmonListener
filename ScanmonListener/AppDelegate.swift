@@ -9,6 +9,8 @@
 import UIKit
 import CoreData
 
+import CocoaLumberjack
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -16,7 +18,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // Override point for customization after application launch.
+
+        // Initialize the logger
+        DDLog.addLogger(DDTTYLogger.sharedInstance())
+        DDTTYLogger.sharedInstance().colorsEnabled = true
+        let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
+        DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
+        DDLogInfo("Application starting!")
+
         return true
     }
 
