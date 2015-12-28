@@ -4,4 +4,10 @@
    <FileRef
       location = "container:ScanmonListener.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:ScanmonListener.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Pods/Pods.xcodeproj">
+   </FileRef>
 </Workspace>
