@@ -19,8 +19,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var currentTitle: UILabel!
     @IBOutlet weak var playButton: UIButton!
 
-    var currentURL = "http://scanmon.greybeard.org:8000/scanner.mp3"
+    var currentURL = "http://www.greybeard.org/scanner"
     var playStream: SMLPlayStream?
+    var activity: NSObjectProtocol?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,7 +43,13 @@ class ViewController: UIViewController {
         playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
         playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
 
-        return playStream?.play(currentURL) ?? false
+        let didStart = playStream?.play(currentURL) ?? false
+
+        if didStart {
+            activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled, .IdleSystemSleepDisabled], reason: "Play started")
+        }
+
+        return didStart
     }
 
     func doStop() {
@@ -50,6 +57,10 @@ class ViewController: UIViewController {
         playStream?.removeObserver(self, forKeyPath: "statusRaw")
         playStream?.removeObserver(self, forKeyPath: "title")
         playStream = nil
+        if (activity != nil) {
+            NSProcessInfo.processInfo().endActivity(activity!)
+        }
+        activity = nil
     }
 
     @IBAction func buttonTouch(sender: UIButton) {
