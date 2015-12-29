@@ -40,6 +40,7 @@ class ViewController: UIViewController {
 
         playStream = SMLPlayStream()
         playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
+        playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
 
         return playStream?.play(currentURL) ?? false
     }
@@ -47,6 +48,7 @@ class ViewController: UIViewController {
     func doStop() {
         playStream?.stop()
         playStream?.removeObserver(self, forKeyPath: "statusRaw")
+        playStream?.removeObserver(self, forKeyPath: "title")
         playStream = nil
     }
 
@@ -136,6 +138,26 @@ class ViewController: UIViewController {
         }
     }
 
+    func observeTitle(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+        if let changeDict = change {
+            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
+                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
+                    if let newVal = changeDict[NSKeyValueChangeNewKey] {
+                        let newTitle = newVal as! String
+                        if kind == NSKeyValueChange.Setting {
+                            DDLogInfo("View: title set: \(newTitle)")
+                            currentTitle.text = newTitle
+                        }
+                    }
+                } else {
+                    DDLogError("View: KeyValueChange invalid value: \(kindNum)")
+                }
+            } else {
+                DDLogError("View: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
+            }
+        }
+    }
+
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
         if let thisPath = keyPath {
             DDLogDebug("View: Observed value change for \(thisPath)")
@@ -143,6 +165,12 @@ class ViewController: UIViewController {
             case "statusRaw":
                 if object === playStream {
                     observeStatus(ofObject: object, change: change, context: context)
+                } else {
+                    DDLogError("View: Unknown observed object \(object)")
+                }
+            case "title":
+                if object === playStream {
+                    observeTitle(ofObject: object, change: change, context: context)
                 } else {
                     DDLogError("View: Unknown observed object \(object)")
                 }
