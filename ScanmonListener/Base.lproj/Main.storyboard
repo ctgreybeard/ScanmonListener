@@ -37,7 +37,7 @@
                                     <action selector="buttonTouch:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Xsh-tM-Y5s"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Silly Yellow Grog" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zqw-UX-mEZ">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Silly Yellow Grog" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zqw-UX-mEZ">
                                 <rect key="frame" x="30" y="71" width="540" height="70"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="100" id="Ca7-4s-yKi"/>

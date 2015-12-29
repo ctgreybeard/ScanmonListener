@@ -18,6 +18,7 @@ enum PlayStatus: String {
     case Playing = "playing"
     case Stopping = "stopping"
     case Stopped = "stopped"
+    case Failed = "Failed"
 }
 
 class SMLPlayStream: NSObject {
@@ -29,24 +30,13 @@ class SMLPlayStream: NSObject {
 
     var status: PlayStatus = .Ready {
         didSet {
+            DDLogDebug("Player: status set")
             statusRaw = status.rawValue
         }
     }
 
     dynamic var title: String?
 
-//    override class func automaticallyNotifiesObserversForKey(key: String) -> Bool {
-//        var automatic: Bool = true
-//
-//        if key == "status" {
-//            automatic = false
-//        } else {
-//            automatic = super.automaticallyNotifiesObserversForKey(key)
-//        }
-//
-//        return automatic
-//    }
-//
     func play(url: String) -> Bool {
         var ok: Bool = false
 
@@ -97,20 +87,22 @@ class SMLPlayStream: NSObject {
     }
 
     func statusChange(status: AVPlayerStatus) {
+        DDLogDebug("Player: statusChange")
         switch status {
         case .Unknown:
             DDLogInfo("Player: status change to Unknown")
         case .ReadyToPlay:
             DDLogInfo("Player: status change to ReadyToPlay")
             _player?.play()
-//            self.setValue(PlayStatus.Playing.rawValue, forKey: "status")
             self.status = .Playing
         case .Failed:
             DDLogInfo("Player: status change to Failed: \(_player?.error)")
+            self.status = .Failed
         }
     }
 
     func metadataChange(data: [AVMetadataItem]) {
+        DDLogDebug("Player: metadataChange")
         // Loop through the metadata looking for the title
         for md in AVMetadataItem.metadataItemsFromArray(data, withKey: "title", keySpace: "comn") {
             if let realTitle = md.stringValue {
@@ -123,6 +115,7 @@ class SMLPlayStream: NSObject {
     }
 
     func observeStatus(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+        DDLogDebug("Player: observeStatus")
         if let changeDict = change {
             if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
                 if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
@@ -139,24 +132,31 @@ class SMLPlayStream: NSObject {
             } else {
                 DDLogError("Player: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
             }
+        } else {
+            DDLogWarn("Player: status: no change dictionary?")
         }
     }
 
     func observeMetadata(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+        DDLogDebug("Player: observeMetadata")
         if let changeDict = change {
             if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
                 if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                        let newMetadata = newVal as! [AVMetadataItem]
+                    DDLogDebug("Player: Change kind: \(kind)")
+                    if let newMetadata = changeDict[NSKeyValueChangeNewKey] as? [AVMetadataItem] {
                         if kind == NSKeyValueChange.Setting {
                             DDLogInfo("Player: Metadata set: \(newMetadata)")
                             metadataChange(newMetadata)
                         }
+                    } else {
+                        DDLogWarn("Player: No metaData found.")
                     }
                 }
             } else {
                 DDLogError("Player: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
             }
+        } else {
+            DDLogWarn("Player: metaData: no change dictionary?")
         }
     }
 
