@@ -111,7 +111,15 @@ class SMLPlayStream: NSObject {
     }
 
     func metadataChange(data: [AVMetadataItem]) {
-
+        // Loop through the metadata looking for the title
+        for md in AVMetadataItem.metadataItemsFromArray(data, withKey: "title", keySpace: "comn") {
+            if let realTitle = md.stringValue {
+                title = realTitle
+                DDLogInfo("Player: Set title: '\(realTitle)'")
+            } else {
+                DDLogWarn("Player: Unexpected value for title: '\(md.value)', type=\(md.dataType)")
+            }
+        }
     }
 
     func observeStatus(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
