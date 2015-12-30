@@ -170,50 +170,33 @@ class ViewController: UIViewController {
         sender.endEditing(false)
     }
 
-    func statusChange(newStatus: PlayStatus) {
+    func statusChange(changeObject: AnyObject) {
         var msg = "??"
-        switch newStatus {
-        case .Playing:
-            msg = "Playing"
-            didPlay()
-        case .Ready:
-            msg = "Ready"
-        case .Starting:
-            msg = "Starting"
-        case .Stopped:
-            msg = "Stopped"
-            didStop()
-        case .Stopping:
-            msg = "Stopping"
-        case .Failed:
-            msg = "Failed"
-            didFail()
-        }
-        DDLogInfo("Stream status change: \(msg)")
-        statusMessage.text = msg
-    }
-
-    func observeStatus(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if let changeDict = change {
-            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
-                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                        let newStatus = newVal as! String
-                        if kind == NSKeyValueChange.Setting {
-                            DDLogInfo("View: Status set: \(newStatus)")
-                            if let changeTo = PlayStatus(rawValue: newStatus) {
-                                statusChange(changeTo)
-                            } else {
-                                DDLogError("View: status change invalid value: \(newStatus)")
-                            }
-                        }
-                    }
-                } else {
-                    DDLogError("View: KeyValueChange invalid value: \(kindNum)")
+        if let newStatus = changeObject as? String {
+            DDLogInfo("View: Status set: \(newStatus)")
+            if let changeTo = PlayStatus(rawValue: newStatus) {
+                switch changeTo {
+                case .Playing:
+                    msg = "Playing"
+                    didPlay()
+                case .Ready:
+                    msg = "Ready"
+                case .Starting:
+                    msg = "Starting"
+                case .Stopped:
+                    msg = "Stopped"
+                    didStop()
+                case .Stopping:
+                    msg = "Stopping"
+                case .Failed:
+                    msg = "Failed"
+                    didFail()
                 }
-            } else {
-                DDLogError("View: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
+                DDLogInfo("View: Stream status change: \(msg)")
+                statusMessage.text = msg
             }
+        } else {
+            DDLogError("View: Status change invalid type: \(changeObject)")
         }
     }
 
@@ -259,13 +242,32 @@ class ViewController: UIViewController {
         }
     }
 
+    func observeChange(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>, handler: (AnyObject) -> ()) {
+        if let changeDict = change {
+            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
+                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
+                    if kind == NSKeyValueChange.Setting {
+                        if let newVal = changeDict[NSKeyValueChangeNewKey] {
+                            // DDLogDebug("View: time set: \(newTime)")
+                            handler(newVal)
+                        }
+                    }
+                } else {
+                    DDLogError("View: KeyValueChange invalid value: \(kindNum)")
+                }
+            } else {
+                DDLogError("View: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
+            }
+        }
+    }
+
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
         if let thisPath = keyPath {
             // DDLogDebug("View: Observed value change for \(thisPath)")
             if object === playStream {
                 switch thisPath {
                 case "statusRaw":
-                    observeStatus(ofObject: object, change: change, context: context)
+                    observeChange(ofObject: object, change: change, context: context, handler: statusChange)
                 case "title":
                     observeTitle(ofObject: object, change: change, context: context)
                 case "time":
