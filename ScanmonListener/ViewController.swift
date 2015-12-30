@@ -200,49 +200,27 @@ class ViewController: UIViewController {
         }
     }
 
-    func observeTitle(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if let changeDict = change {
-            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
-                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                        let newTitle = newVal as! String
-                        if kind == NSKeyValueChange.Setting {
-                            DDLogInfo("View: title set: \(newTitle)")
-                            currentTitle.text = newTitle
-                        }
-                    }
-                } else {
-                    DDLogError("View: KeyValueChange invalid value: \(kindNum)")
-                }
-            } else {
-                DDLogError("View: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
-            }
+    func titleChange(changeObject: AnyObject) {
+        if let newTitle = changeObject as? String {
+            DDLogInfo("View: title set: \(newTitle)")
+            currentTitle.text = newTitle
+        } else {
+            DDLogError("View: Title change invalid type: \(changeObject)")
         }
     }
 
-    func observeTime(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if let changeDict = change {
-            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
-                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                        let newTime = newVal as! NSNumber
-                        if kind == NSKeyValueChange.Setting {
-                            // DDLogDebug("View: time set: \(newTime)")
-                            if let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) {
-                                statusMessage.text = "Time: \(strTime)"
-                            }
-                        }
-                    }
-                } else {
-                    DDLogError("View: KeyValueChange invalid value: \(kindNum)")
-                }
-            } else {
-                DDLogError("View: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
+    func timeChange(changeObject: AnyObject) {
+        if let newTime = changeObject as? NSNumber {
+            // DDLogDebug("View: time set: \(newTime)")
+            if let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) {
+                statusMessage.text = "Time: \(strTime)"
             }
+        } else {
+            DDLogError("View: Time change invalid type: \(changeObject)")
         }
     }
 
-    func observeChange(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>, handler: (AnyObject) -> ()) {
+    func observeChange(change: [String : AnyObject]?, handler: (AnyObject) -> ()) {
         if let changeDict = change {
             if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
                 if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
@@ -267,11 +245,11 @@ class ViewController: UIViewController {
             if object === playStream {
                 switch thisPath {
                 case "statusRaw":
-                    observeChange(ofObject: object, change: change, context: context, handler: statusChange)
+                    observeChange(change, handler: statusChange)
                 case "title":
-                    observeTitle(ofObject: object, change: change, context: context)
+                    observeChange(change, handler: titleChange)
                 case "time":
-                    observeTime(ofObject: object, change: change, context: context)
+                    observeChange(change, handler: timeChange)
                 default:
                     DDLogError("View: Got value change for unknown: \(thisPath)")
                 }
