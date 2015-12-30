@@ -128,102 +128,81 @@ class SMLPlayStream: NSObject {
         }
     }
 
-    func statusChange(status: AVPlayerStatus) {
-        DDLogDebug("Player: statusChange")
-        switch status {
-        case .Unknown:
-            DDLogInfo("Player: status change to Unknown")
-        case .ReadyToPlay:
-            DDLogInfo("Player: status change to ReadyToPlay")
-            _player?.play()
-            self.status = .Playing
-        case .Failed:
-            DDLogInfo("Player: status change to Failed: \(_player?.error)")
-            self.status = .Failed
-        }
-    }
-
-    func metadataChange(data: [AVMetadataItem]) {
-        DDLogDebug("Player: metadataChange")
-        // Loop through the metadata looking for the title
-        for md in AVMetadataItem.metadataItemsFromArray(data, withKey: "title", keySpace: "comn") {
-            if let realTitle = md.stringValue {
-                title = realTitle
-                DDLogInfo("Player: Set title: '\(realTitle)'")
+    func statusChange(changeObject: AnyObject) {
+        if let newStatus = changeObject as? Int {
+            DDLogDebug("Player: statusChange")
+            if let status = AVPlayerStatus(rawValue: newStatus) {
+                switch status {
+                case .Unknown:
+                    DDLogInfo("Player: status change to Unknown")
+                case .ReadyToPlay:
+                    DDLogInfo("Player: status change to ReadyToPlay")
+                    _player?.play()
+                    self.status = .Playing
+                case .Failed:
+                    DDLogInfo("Player: status change to Failed: \(_player?.error)")
+                    self.status = .Failed
+                }
             } else {
-                DDLogWarn("Player: Unexpected value for title: '\(md.value)', type=\(md.dataType)")
+                DDLogError("Player: Invalid AVPlayerStatus value: \(newStatus)")
             }
+        } else {
+            DDLogError("Player: status change invalid type: \(changeObject)")
         }
     }
 
-    func observeStatus(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        DDLogDebug("Player: observeStatus")
+    func metadataChange(changeObject: AnyObject) {
+        if let data = changeObject as? [AVMetadataItem] {
+            DDLogDebug("Player: metadataChange")
+            // Loop through the metadata looking for the title
+            for md in AVMetadataItem.metadataItemsFromArray(data, withKey: "title", keySpace: "comn") {
+                if let realTitle = md.stringValue {
+                    title = realTitle
+                    DDLogInfo("Player: Set title: '\(realTitle)'")
+                } else {
+                    DDLogWarn("Player: Unexpected value for title: '\(md.value)', type=\(md.dataType)")
+                }
+            }
+        } else {
+            DDLogError("Player: metadata change invalid type: \(changeObject)")
+        }
+    }
+
+    func observeChange(change: [String : AnyObject]?, handler: (AnyObject) -> ()) {
         if let changeDict = change {
             if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
                 if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                        let newStatus = newVal as! Int
-                        if kind == NSKeyValueChange.Setting {
-                            DDLogInfo("Player: Status set: \(newStatus)")
-                            if let changeTo = AVPlayerStatus(rawValue: newStatus) {
-                                statusChange(changeTo)
-                            }
+                    if kind == NSKeyValueChange.Setting {
+                        if let newVal = changeDict[NSKeyValueChangeNewKey] {
+                            handler(newVal)
                         }
                     }
+                } else {
+                    DDLogError("Player: KeyValueChange invalid value: \(kindNum)")
                 }
             } else {
                 DDLogError("Player: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
             }
-        } else {
-            DDLogWarn("Player: status: no change dictionary?")
-        }
-    }
-
-    func observeMetadata(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        DDLogDebug("Player: observeMetadata")
-        if let changeDict = change {
-            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
-                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    DDLogDebug("Player: Change kind: \(kind)")
-                    if let newMetadata = changeDict[NSKeyValueChangeNewKey] as? [AVMetadataItem] {
-                        if kind == NSKeyValueChange.Setting {
-                            DDLogInfo("Player: Metadata set: \(newMetadata)")
-                            metadataChange(newMetadata)
-                        }
-                    } else {
-                        DDLogWarn("Player: No metaData found.")
-                    }
-                }
-            } else {
-                DDLogError("Player: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
-            }
-        } else {
-            DDLogWarn("Player: metaData: no change dictionary?")
         }
     }
 
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
         if let thisPath = keyPath {
-            DDLogDebug("Player: Observed value change for \(thisPath)")
-            switch thisPath {
+            if object === _player {
+                switch thisPath {
                 case "status":
-                    if object === _player {
-                        observeStatus(ofObject: object, change: change, context: context)
-                    } else {
-                        DDLogError("Unknown observed object \(object)")
-                    }
+                    observeChange(change, handler: statusChange)
                 case "currentItem.timedMetadata":
-                    if object === _player {
-                        observeMetadata(ofObject: object, change: change, context: context)
-                    } else {
-                        DDLogError("Unknown observed object \(object)")
-                    }
-            default:
-                DDLogError("Got value change for unknown: \(thisPath)")
+                    observeChange(change, handler: metadataChange)
+                default:
+                    DDLogError("Player: Got value change for unknown: \(thisPath)")
+                }
+            } else {
+                DDLogError("Player: Unknown observed object \(object)")
             }
         } else {
-            DDLogError("Got nil key for value change")
+            DDLogError("Player: Got nil key for value change")
         }
     }
-    
+
 }

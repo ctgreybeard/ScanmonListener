@@ -52,6 +52,7 @@ class ViewController: UIViewController {
         // Initialize the time formatter
         timeFormatter.allowedUnits = [.Hour, .Minute, .Second]
         timeFormatter.unitsStyle = .Abbreviated
+        timeFormatter.zeroFormattingBehavior = .DropLeading
     }
 
     override func didReceiveMemoryWarning() {
