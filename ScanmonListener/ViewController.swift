@@ -22,6 +22,16 @@ class ViewController: UIViewController {
     var currentURL = "http://www.greybeard.org/scanner"
     var playStream: SMLPlayStream?
     var activity: NSObjectProtocol?
+    var buttonTitle = "Ready" {
+        didSet {
+            playButton.setTitle(buttonTitle, forState: [.Normal])
+            DDLogDebug("View: button set: '\(buttonTitle)'")
+        }
+    }
+
+    let playTitle = "Play"
+    let stopTitle = "Stop"
+    let startTitle = "Starting"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,18 +72,24 @@ class ViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         DDLogDebug("View: viewDidLayoutSubviews")
     }
-    
+
     func doPlay() -> Bool {
+        var willStart = false
 
-        playStream = SMLPlayStream()
-        playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
-        playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
+        if playStream == nil {
+            playStream = SMLPlayStream()
+            playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
+            playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
 
-        let willStart = playStream?.play(currentURL) ?? false
+            willStart = playStream?.play(currentURL) ?? false
 
-        if willStart {
-            activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled, .IdleSystemSleepDisabled], reason: "Play started")
-            playButton.titleLabel?.text = "Starting ..."
+            if willStart {
+                activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled, .IdleSystemSleepDisabled], reason: "Play started")
+                buttonTitle = startTitle
+            }
+        } else {
+            DDLogError("View: Play requested but already playing!")
+            buttonTitle = stopTitle
         }
 
         return willStart
@@ -81,7 +97,7 @@ class ViewController: UIViewController {
 
     func didPlay() {
         DDLogDebug("View: didPlay")
-        playButton.titleLabel?.text = "Stop"
+        buttonTitle = stopTitle
     }
 
     func didFail() {
@@ -96,19 +112,23 @@ class ViewController: UIViewController {
 
     func didStop() {
         DDLogDebug("View: didStop")
-        playButton.titleLabel?.text = "Play"
-        playStream?.removeObserver(self, forKeyPath: "statusRaw")
-        playStream?.removeObserver(self, forKeyPath: "title")
-        playStream = nil
+        buttonTitle = playTitle
+
+        if let ps = playStream {
+            ps.removeObserver(self, forKeyPath: "statusRaw")
+            ps.removeObserver(self, forKeyPath: "title")
+            playStream = nil
+        }
+
         if (activity != nil) {
             NSProcessInfo.processInfo().endActivity(activity!)
+            activity = nil
         }
-        activity = nil
     }
 
     @IBAction func buttonTouch(sender: UIButton) {
         DDLogDebug("Button Touched!")
-        if let thisTitle = sender.titleLabel?.text {
+        if let thisTitle = sender.currentTitle {
             if thisTitle == "Play" {
                 if doPlay() {
                     DDLogDebug("View: Play requested")

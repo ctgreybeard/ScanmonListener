@@ -30,6 +30,7 @@
                                 <constraints>
                                     <constraint firstAttribute="width" constant="70" id="WUy-da-Qaz"/>
                                 </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                 <state key="normal" title="Play">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
