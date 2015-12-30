@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import AVFoundation
 
 import CocoaLumberjack
 
@@ -16,15 +17,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
 
         // Initialize the logger
         DDLog.addLogger(DDTTYLogger.sharedInstance())
+        DDLog.addLogger(DDASLLogger.sharedInstance())
         DDTTYLogger.sharedInstance().colorsEnabled = true
         let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
         DDLogInfo("Application starting!")
+
+        // Establish the Audio Session
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+        }
+        catch {
+            DDLogError("App: audioSession category error: \(error))")
+        }
+        do {
+            try audioSession.setMode(AVAudioSessionModeSpokenAudio)
+        }
+        catch {
+            DDLogError("App: audioSession mode error: \(error))")
+        }
 
         return true
     }
@@ -33,11 +49,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
         DDLogInfo("Application resigning!")
-        if let rootView = window?.rootViewController {
-            if let myView = rootView as? ViewController {
-                myView.doStop()
-            }
-        }
     }
 
     func applicationDidEnterBackground(application: UIApplication) {

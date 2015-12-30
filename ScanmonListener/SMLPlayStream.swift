@@ -37,6 +37,10 @@ class SMLPlayStream: NSObject {
 
     dynamic var title: String?
 
+    func audioNotification(note: NSNotification) {
+        DDLogDebug("Player: Audio Notification: \(note)")
+    }
+
     func play(url: String) -> Bool {
         var ok: Bool = false
 
@@ -53,6 +57,18 @@ class SMLPlayStream: NSObject {
             newPlayer.addObserver(self, forKeyPath: "status", options: .New, context: nil)
             newPlayer.addObserver(self, forKeyPath: "currentItem.timedMetadata", options: .New, context: nil)
             status = .Starting
+
+            let aSess = AVAudioSession.sharedInstance()
+            do {
+                try aSess.setActive(true)
+            }
+            catch {
+                DDLogError("Audio session failed: \(error)")
+            }
+
+            // Set up notifications
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: "audioNotification", name: AVAudioSessionInterruptionNotification, object: aSess)
+
             ok = true
         } else {
             DDLogError("Create URL failed")
@@ -66,10 +82,20 @@ class SMLPlayStream: NSObject {
         _player?.pause()
         _player?.removeObserver(self, forKeyPath: "status")
         _player?.removeObserver(self, forKeyPath: "currentItem.timedMetadata")
+
+        // Remove notifications
+        NSNotificationCenter.defaultCenter().removeObserver(self)
+
         _player = nil
-//        self.setValue(PlayStatus.Stopped.rawValue, forKey: "status")
         status = .Stopped
-    }
+        do {
+            try AVAudioSession.sharedInstance().setActive(false)
+        }
+        catch {
+            DDLogError("Audio session failed: \(error)")
+        }
+
+}
 
     var playing: Bool {
         get {
