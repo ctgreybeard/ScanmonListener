@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import AVFoundation
 
 import CocoaLumberjack
 
@@ -16,15 +17,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
 
         // Initialize the logger
         DDLog.addLogger(DDTTYLogger.sharedInstance())
+        DDLog.addLogger(DDASLLogger.sharedInstance())
         DDTTYLogger.sharedInstance().colorsEnabled = true
         let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
         DDLogInfo("Application starting!")
+
+        // Establish the Audio Session
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+        }
+        catch {
+            DDLogError("App: audioSession category error: \(error))")
+        }
+        do {
+            try audioSession.setMode(AVAudioSessionModeSpokenAudio)
+        }
+        catch {
+            DDLogError("App: audioSession mode error: \(error))")
+        }
 
         return true
     }

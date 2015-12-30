@@ -19,8 +19,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var currentTitle: UILabel!
     @IBOutlet weak var playButton: UIButton!
 
-    var currentURL = "http://scanmon.greybeard.org:8000/scanner.mp3"
+    var currentURL = "http://www.greybeard.org/scanner"
     var playStream: SMLPlayStream?
+    var activity: NSObjectProtocol?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,6 +30,8 @@ class ViewController: UIViewController {
         self.currentTitle.text = "Nothing playing..."
         self.statusLog.text = "Application started"
         self.streamURL.text = currentURL
+        playButton.titleLabel?.adjustsFontSizeToFitWidth = true
+        playButton.titleLabel?.minimumScaleFactor = 0.5
     }
 
     override func didReceiveMemoryWarning() {
@@ -36,20 +39,71 @@ class ViewController: UIViewController {
         DDLogWarn("Memory Warning!")
     }
 
+    override func viewDidAppear(animated: Bool) {
+        DDLogDebug("View: viewDidAppear")
+    }
+
+    override func viewDidDisappear(animated: Bool) {
+        DDLogDebug("View: viewDidDisappear")
+    }
+
+    override func viewWillAppear(animated: Bool) {
+        DDLogDebug("View: viewWillAppear")
+    }
+
+    override func viewWillDisappear(animated: Bool) {
+        DDLogDebug("View: viewWillDisappear")
+    }
+
+    override func viewWillLayoutSubviews() {
+        DDLogDebug("View: viewWillLayoutSubviews")
+    }
+
+    override func viewDidLayoutSubviews() {
+        DDLogDebug("View: viewDidLayoutSubviews")
+    }
+    
     func doPlay() -> Bool {
 
         playStream = SMLPlayStream()
         playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
         playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
 
-        return playStream?.play(currentURL) ?? false
+        let willStart = playStream?.play(currentURL) ?? false
+
+        if willStart {
+            activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled, .IdleSystemSleepDisabled], reason: "Play started")
+            playButton.titleLabel?.text = "Starting ..."
+        }
+
+        return willStart
+    }
+
+    func didPlay() {
+        DDLogDebug("View: didPlay")
+        playButton.titleLabel?.text = "Stop"
+    }
+
+    func didFail() {
+        DDLogDebug("View: didFail")
+        didStop()
     }
 
     func doStop() {
+        DDLogDebug("View: doStop")
         playStream?.stop()
+    }
+
+    func didStop() {
+        DDLogDebug("View: didStop")
+        playButton.titleLabel?.text = "Play"
         playStream?.removeObserver(self, forKeyPath: "statusRaw")
         playStream?.removeObserver(self, forKeyPath: "title")
         playStream = nil
+        if (activity != nil) {
+            NSProcessInfo.processInfo().endActivity(activity!)
+        }
+        activity = nil
     }
 
     @IBAction func buttonTouch(sender: UIButton) {
@@ -57,19 +111,15 @@ class ViewController: UIViewController {
         if let thisTitle = sender.titleLabel?.text {
             if thisTitle == "Play" {
                 if doPlay() {
-                    DDLogDebug("Button is: '\(thisTitle)', Setting to Stop")
-                    sender.setTitle("Stop", forState: UIControlState.Normal)
-                    self.currentTitle.text = "...playing..."
+                    DDLogDebug("View: Play requested")
                     self.statusLog.appendLine("Playing \(currentURL)")
                 } else {
                     self.statusLog.appendLine("Play failed")
-                    DDLogError("Play failed")
+                    DDLogError("View: Play request failed")
                 }
             } else {
-                DDLogDebug("Button is: '\(thisTitle)', Setting to Play")
-                sender.setTitle("Play", forState: UIControlState.Normal)
+                DDLogDebug("View: Stop requested")
                 doStop()
-                self.currentTitle.text = "Nothing playing..."
             }
         } else {
             DDLogError("No button tile!")
@@ -101,14 +151,19 @@ class ViewController: UIViewController {
         switch newStatus {
         case .Playing:
             msg = "Playing"
+            didPlay()
         case .Ready:
             msg = "Ready"
         case .Starting:
             msg = "Starting"
         case .Stopped:
             msg = "Stopped"
+            didStop()
         case .Stopping:
             msg = "Stopping"
+        case .Failed:
+            msg = "Failed"
+            didFail()
         }
         DDLogInfo("Stream status change: \(msg)")
         statusMessage.text = msg
