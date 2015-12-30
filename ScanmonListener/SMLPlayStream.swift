@@ -36,8 +36,12 @@ class SMLPlayStream: NSObject {
     }
 
     dynamic var title: String?
+    dynamic var time: NSNumber?
 
-    func audioNotification(note: NSNotification) {
+    // Private instance variables
+    private var timeObserver: AnyObject?
+
+    dynamic func audioNotification(note: NSNotification) {
         DDLogDebug("Player: Audio Notification: \(note)")
     }
 
@@ -52,10 +56,20 @@ class SMLPlayStream: NSObject {
         if let newURL = NSURL(string: url) {
             self.url = newURL
             DDLogInfo("Attempting to play: \(newURL)")
+
             let newPlayer = AVPlayer(URL: newURL)
             _player = newPlayer
+
+            // Set play parameters
+            newPlayer.actionAtItemEnd = .Pause
+
+            // Set observers
             newPlayer.addObserver(self, forKeyPath: "status", options: .New, context: nil)
             newPlayer.addObserver(self, forKeyPath: "currentItem.timedMetadata", options: .New, context: nil)
+            timeObserver = newPlayer.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 10), queue: nil, usingBlock: {(time: CMTime) in
+                    self.time = time.seconds
+                })
+
             status = .Starting
 
             let aSess = AVAudioSession.sharedInstance()
@@ -67,7 +81,7 @@ class SMLPlayStream: NSObject {
             }
 
             // Set up notifications
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: "audioNotification", name: AVAudioSessionInterruptionNotification, object: aSess)
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: aSess)
 
             ok = true
         } else {
@@ -82,6 +96,8 @@ class SMLPlayStream: NSObject {
         _player?.pause()
         _player?.removeObserver(self, forKeyPath: "status")
         _player?.removeObserver(self, forKeyPath: "currentItem.timedMetadata")
+        _player?.removeTimeObserver(timeObserver!)
+        timeObserver = nil
 
         // Remove notifications
         NSNotificationCenter.defaultCenter().removeObserver(self)

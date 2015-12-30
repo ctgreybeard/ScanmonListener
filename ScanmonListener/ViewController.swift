@@ -32,16 +32,26 @@ class ViewController: UIViewController {
     let playTitle = "Play"
     let stopTitle = "Stop"
     let startTitle = "Starting"
+
+    // Internal variables
+    let timeFormatter = NSDateComponentsFormatter()
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         DDLogInfo("View Loaded")
-        self.currentTitle.text = "Nothing playing..."
+        self.currentTitle.text = "Fire/EMS"
         self.statusLog.text = "Application started"
         self.streamURL.text = currentURL
         playButton.titleLabel?.adjustsFontSizeToFitWidth = true
         playButton.titleLabel?.minimumScaleFactor = 0.5
+        if let myView = view as? UIScrollView {
+            DDLogDebug("View: scrolling enabled: \(myView.scrollEnabled)")
+        }
+
+        // Initialize the time formatter
+        timeFormatter.allowedUnits = [.Hour, .Minute, .Second]
+        timeFormatter.unitsStyle = .Abbreviated
     }
 
     override func didReceiveMemoryWarning() {
@@ -65,14 +75,6 @@ class ViewController: UIViewController {
         DDLogDebug("View: viewWillDisappear")
     }
 
-    override func viewWillLayoutSubviews() {
-        DDLogDebug("View: viewWillLayoutSubviews")
-    }
-
-    override func viewDidLayoutSubviews() {
-        DDLogDebug("View: viewDidLayoutSubviews")
-    }
-
     func doPlay() -> Bool {
         var willStart = false
 
@@ -80,6 +82,7 @@ class ViewController: UIViewController {
             playStream = SMLPlayStream()
             playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
             playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
+            playStream?.addObserver(self, forKeyPath: "time", options: .New, context: nil)
 
             willStart = playStream?.play(currentURL) ?? false
 
@@ -117,6 +120,7 @@ class ViewController: UIViewController {
         if let ps = playStream {
             ps.removeObserver(self, forKeyPath: "statusRaw")
             ps.removeObserver(self, forKeyPath: "title")
+            ps.removeObserver(self, forKeyPath: "time")
             playStream = nil
         }
 
@@ -233,24 +237,44 @@ class ViewController: UIViewController {
         }
     }
 
+    func observeTime(ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+        if let changeDict = change {
+            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
+                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
+                    if let newVal = changeDict[NSKeyValueChangeNewKey] {
+                        let newTime = newVal as! NSNumber
+                        if kind == NSKeyValueChange.Setting {
+                            // DDLogDebug("View: time set: \(newTime)")
+                            if let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) {
+                                statusMessage.text = "Time: \(strTime)"
+                            }
+                        }
+                    }
+                } else {
+                    DDLogError("View: KeyValueChange invalid value: \(kindNum)")
+                }
+            } else {
+                DDLogError("View: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
+            }
+        }
+    }
+
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
         if let thisPath = keyPath {
-            DDLogDebug("View: Observed value change for \(thisPath)")
-            switch thisPath {
-            case "statusRaw":
-                if object === playStream {
+            // DDLogDebug("View: Observed value change for \(thisPath)")
+            if object === playStream {
+                switch thisPath {
+                case "statusRaw":
                     observeStatus(ofObject: object, change: change, context: context)
-                } else {
-                    DDLogError("View: Unknown observed object \(object)")
-                }
-            case "title":
-                if object === playStream {
+                case "title":
                     observeTitle(ofObject: object, change: change, context: context)
-                } else {
-                    DDLogError("View: Unknown observed object \(object)")
+                case "time":
+                    observeTime(ofObject: object, change: change, context: context)
+                default:
+                    DDLogError("View: Got value change for unknown: \(thisPath)")
                 }
-            default:
-                DDLogError("View: Got value change for unknown: \(thisPath)")
+            } else {
+                DDLogError("View: Unknown observed object \(object)")
             }
         } else {
             DDLogError("View: Got nil key for value change")
