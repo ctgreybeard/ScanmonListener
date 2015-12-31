@@ -84,6 +84,7 @@ class ViewController: UIViewController {
             playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
             playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
             playStream?.addObserver(self, forKeyPath: "time", options: .New, context: nil)
+            playStream?.addObserver(self, forKeyPath: "logentry", options: .New, context: nil)
 
             willStart = playStream?.play(currentURL) ?? false
 
@@ -111,7 +112,7 @@ class ViewController: UIViewController {
 
     func doStop() {
         DDLogDebug("View: doStop")
-        playStream?.stop()
+        playStream?.stop("Stop requested")
     }
 
     func didStop() {
@@ -122,6 +123,7 @@ class ViewController: UIViewController {
             ps.removeObserver(self, forKeyPath: "statusRaw")
             ps.removeObserver(self, forKeyPath: "title")
             ps.removeObserver(self, forKeyPath: "time")
+            ps.removeObserver(self, forKeyPath: "logentry")
             playStream = nil
         }
 
@@ -171,83 +173,104 @@ class ViewController: UIViewController {
         sender.endEditing(false)
     }
 
-    func statusChange(changeObject: AnyObject) {
-        var msg = "??"
-        if let newStatus = changeObject as? String {
-            DDLogInfo("View: Status set: \(newStatus)")
-            if let changeTo = PlayStatus(rawValue: newStatus) {
-                switch changeTo {
-                case .Playing:
-                    msg = "Playing"
-                    didPlay()
-                case .Ready:
-                    msg = "Ready"
-                case .Starting:
-                    msg = "Starting"
-                case .Stopped:
-                    msg = "Stopped"
-                    didStop()
-                case .Stopping:
-                    msg = "Stopping"
-                case .Failed:
-                    msg = "Failed"
-                    didFail()
-                }
-                DDLogInfo("View: Stream status change: \(msg)")
-                statusMessage.text = msg
-            }
-        } else {
-            DDLogError("View: Status change invalid type: \(changeObject)")
+    func statusChange(changeObject: AnyObject?) -> String? {
+
+        guard let newStatus = changeObject as? String else {
+            return "Status change invalid type: '\(changeObject!)'"
         }
+
+        guard let changeTo = PlayStatus(rawValue: newStatus) else {
+            return "Status change invalid value '\(newStatus)'"
+        }
+
+        DDLogInfo("View: Status set: \(changeTo)")
+
+        let msg: String
+
+        switch changeTo {
+        case .Playing:
+            msg = "Playing"
+            didPlay()
+        case .Ready:
+            msg = "Ready"
+        case .Starting:
+            msg = "Starting"
+        case .Stopped:
+            msg = "Stopped"
+            didStop()
+        case .Stopping:
+            msg = "Stopping"
+        case .Failed:
+            msg = "Failed"
+            didFail()
+        }
+
+        statusMessage.text = msg
+
+        return nil
     }
 
-    func titleChange(changeObject: AnyObject) {
+    func logEntry(changeObject: AnyObject?) -> String? {
+
+        guard let newLog = changeObject as? String else {
+            return "Log entry invalid type: '\(changeObject!)'"
+        }
+
+        DDLogInfo("View: log entry: \(newLog)")
+
+        statusLog.appendLine(newLog)
+
+        return nil
+    }
+    
+    func titleChange(changeObject: AnyObject?) -> String? {
 
         guard let newTitle = changeObject as? String else {
-            DDLogError("View: Title change invalid type: \(changeObject)")
-            return
+            return "Title change invalid type: '\(changeObject!)'"
         }
 
         DDLogInfo("View: title set: \(newTitle)")
+
         currentTitle.text = newTitle
+
+        return nil
     }
 
-    func timeChange(changeObject: AnyObject) {
+    func timeChange(changeObject: AnyObject?) -> String? {
 
         guard let newTime = changeObject as? NSNumber else {
-            DDLogError("View: Time change invalid type: \(changeObject)")
-            return
+            return "Time change invalid type: '\(changeObject!)'"
         }
 
-        if let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) {
-            statusMessage.text = "Time: \(strTime)"
+        guard let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) else {
+            return "Time change invalid time value '\(newTime)'"
         }
+
+        statusMessage.text = "Time: \(strTime)"
+
+        return nil
     }
 
-    func observeChange(change: [String : AnyObject]?, handler: (AnyObject) -> ()) -> String? {
+    func observeChange(change: [String : AnyObject]?, handler: (AnyObject?) -> String?) -> String? {
 
         guard let changeDict = change else {
-            return "status change invalid \(change)"
+            return "KeyValueChange change invalid '\(change!)'"
         }
 
         guard let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber else {
-            return "KeyValueChange invalid value: \(changeDict[NSKeyValueChangeKindKey])"
+            return "KeyValueChange value invalid: '\(changeDict[NSKeyValueChangeKindKey]!)'"
         }
 
         guard let kind = NSKeyValueChange(rawValue: UInt(kindNum)) else {
-            return "Invalid ChangeKind: \(kindNum)"
+            return "KeyValueChange change kind invalid: '\(kindNum)'"
+        }
+
+        guard kind == NSKeyValueChange.Setting else {
+            return "KeyValueChange unexpected change kind: '\(kind)'"
         }
 
         // Working code begins here ...
-        if kind == NSKeyValueChange.Setting {
-            if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                handler(newVal)
-            } else {
-                return "No new value found"
-            }
-        }
-
-        return nil
+        return handler(changeDict[NSKeyValueChangeNewKey])
     }
 
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
@@ -258,19 +281,27 @@ class ViewController: UIViewController {
         }
 
         guard object === playStream else {
-            DDLogError("View: Unknown observed object \(object)")
+            DDLogError("View: Unknown observed object '\(object!)'")
             return
         }
+
+        // DDLogDebug("View: keyPath changed: \(thisPath)")
 
         let result: String?
 
         switch thisPath {
         case "statusRaw":
             result = observeChange(change, handler: statusChange)
+
         case "title":
             result = observeChange(change, handler: titleChange)
+
         case "time":
             result = observeChange(change, handler: timeChange)
+
+        case "logentry":
+            result = observeChange(change, handler: logEntry)
+
         default:
             result = "Got value change for unknown"
         }
@@ -280,4 +311,3 @@ class ViewController: UIViewController {
         }
     }
 }
-

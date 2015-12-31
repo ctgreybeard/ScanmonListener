@@ -37,12 +37,71 @@ class SMLPlayStream: NSObject {
 
     dynamic var title: String?
     dynamic var time: NSNumber?
+    dynamic var logentry: String?
 
     // Private instance variables
     private var timeObserver: AnyObject?
 
     dynamic func audioNotification(note: NSNotification) {
-        DDLogDebug("Player: Audio Notification: \(note)")
+        DDLogDebug("Player: audioNotification: name: '\(note.name)'")
+        DDLogDebug("Player: audioNotification: object: '\(note.object!)'")
+        if note.userInfo != nil {
+            DDLogDebug("Player: audioNotification: userinfo: '\(note.userInfo!)'")
+        }
+
+        if note.name == "AVAudioSessionRouteChangeNotification" {
+            guard let userInfo = note.userInfo as? [String: AnyObject] else {
+                DDLogError("Player: audioNotification: userInfo not valid")
+                return
+            }
+
+            guard let reasonNum = userInfo["AVAudioSessionRouteChangeReasonKey"] as? NSNumber else {
+                DDLogError("Player: audioNotification: ChangeReason not valid: \(userInfo["AVAudioSessionRouteChangeReasonKey"])")
+                return
+            }
+
+            guard let reason = AVAudioSessionRouteChangeReason(rawValue: UInt(reasonNum)) where reasonNum.intValue >= 0  else {
+                DDLogError("Player: audioNotification: ChangeReason not valid")
+                return
+            }
+
+            DDLogDebug("Player: audioNotification: reason: \(reason) (\(reason.rawValue))")
+
+            var oldRoute = "Unknown"
+            var newRoute = "Unknown"
+
+            if let oldDesc = userInfo["AVAudioSessionRouteChangePreviousRouteKey"] as? AVAudioSessionRouteDescription {
+                if oldDesc.outputs.count > 0 {
+                    oldRoute = oldDesc.outputs[0].portName
+                }
+            }
+
+            let newDesc = AVAudioSession.sharedInstance().currentRoute
+            if newDesc.outputs.count > 0 {
+                newRoute = newDesc.outputs[0].portName
+            }
+
+            DDLogDebug("Player: audioNotification: route change: old: \(oldRoute), new: \(newRoute)")
+
+            // AVPlayer maybe pauses on audio route change (unplug headset, etc.)
+            DDLogDebug("Player: audioNotification: current rate: \(_player!.rate)")
+
+            if _player!.rate == 0.0 {
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.stop("Output changed")
+                })
+            }
+
+        } else if note.name == "AVPlayerItemDidPlayToEndTimeNotification" ||        // Source was killed or client kicked
+                  note.name == "AVPlayerItemFailedToPlayToEndTimeNotification" ||   // Lost the connection?
+                  note.name == "AVPlayerItemPlaybackStalledNotification" {          // Network error?
+
+            // Lost the stream somehow
+            dispatch_async(dispatch_get_main_queue(), {
+                self.stop(note.name)
+            })
+
+        }
     }
 
     func play(url: String) -> Bool {
@@ -50,12 +109,14 @@ class SMLPlayStream: NSObject {
 
         DDLogInfo("Player starting: \(url)")
         if playing {
-            stop()
+            stop("Restart")
         }
 
         if let newURL = NSURL(string: url) {
             self.url = newURL
             DDLogInfo("Attempting to play: \(newURL)")
+
+            status = .Starting
 
             let newPlayer = AVPlayer(URL: newURL)
             _player = newPlayer
@@ -64,35 +125,38 @@ class SMLPlayStream: NSObject {
             newPlayer.actionAtItemEnd = .Pause
 
             // Set observers
-            newPlayer.addObserver(self, forKeyPath: "status", options: .New, context: nil)
-            newPlayer.addObserver(self, forKeyPath: "currentItem.timedMetadata", options: .New, context: nil)
-            timeObserver = newPlayer.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 10), queue: nil, usingBlock: {(time: CMTime) in
+            newPlayer.addObserver(self, forKeyPath: "status", options: [.Initial, .New], context: nil)
+            newPlayer.addObserver(self, forKeyPath: "currentItem.timedMetadata", options: [.Initial, .New], context: nil)
+            timeObserver = newPlayer.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil, usingBlock: {(time: CMTime) in
                     self.time = time.seconds
                 })
-
-            status = .Starting
 
             let aSess = AVAudioSession.sharedInstance()
             do {
                 try aSess.setActive(true)
             }
             catch {
-                DDLogError("Audio session failed: \(error)")
+                DDLogError("Player: Audio session set Active failed: \(error)")
             }
 
             // Set up notifications
             NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: aSess)
+            if _player?.currentItem != nil {
+                NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: _player!.currentItem!)
+            }
 
             ok = true
         } else {
-            DDLogError("Create URL failed")
+            DDLogError("Player: Create URL failed")
         }
 
         return ok
     }
 
-    func stop() {
-        DDLogInfo("Player stopping")
+    func stop(reason: String) {
+        DDLogInfo("Player: Stopping")
+        logentry = "Stopped: \(reason)"
+
         _player?.pause()
         _player?.removeObserver(self, forKeyPath: "status")
         _player?.removeObserver(self, forKeyPath: "currentItem.timedMetadata")
@@ -104,11 +168,12 @@ class SMLPlayStream: NSObject {
 
         _player = nil
         status = .Stopped
+
         do {
             try AVAudioSession.sharedInstance().setActive(false)
         }
         catch {
-            DDLogError("Audio session failed: \(error)")
+            DDLogError("Player: Audio session set Inactive failed: \(error)")
         }
 
 }
@@ -128,81 +193,109 @@ class SMLPlayStream: NSObject {
         }
     }
 
-    func statusChange(changeObject: AnyObject) {
-        if let newStatus = changeObject as? Int {
-            DDLogDebug("Player: statusChange")
-            if let status = AVPlayerStatus(rawValue: newStatus) {
-                switch status {
-                case .Unknown:
-                    DDLogInfo("Player: status change to Unknown")
-                case .ReadyToPlay:
-                    DDLogInfo("Player: status change to ReadyToPlay")
-                    _player?.play()
-                    self.status = .Playing
-                case .Failed:
-                    DDLogInfo("Player: status change to Failed: \(_player?.error)")
-                    self.status = .Failed
-                }
-            } else {
-                DDLogError("Player: Invalid AVPlayerStatus value: \(newStatus)")
-            }
-        } else {
-            DDLogError("Player: status change invalid type: \(changeObject)")
+    func statusChange(changeObject: AnyObject?) -> String? {
+        guard let newStatus = changeObject as? Int else {
+            return "Status change invalid type: '\(changeObject!)'"
         }
+
+        DDLogDebug("Player: statusChange")
+
+        guard let status = AVPlayerStatus(rawValue: newStatus) else {
+            return "Invalid AVPlayerStatus value: '\(newStatus)'"
+        }
+
+        let error: String?
+
+        switch status {
+        case .Unknown:
+            error = "Status change to 'Unknown'"
+
+        case .ReadyToPlay:
+            DDLogInfo("Player: status change to ReadyToPlay")
+            _player?.play()
+            self.status = .Playing
+            error = nil
+
+        case .Failed:
+            DDLogInfo("Player: status change to Failed: \(_player?.error!)")
+            self.status = .Failed
+            error = nil
+        }
+
+        return error
     }
 
-    func metadataChange(changeObject: AnyObject) {
-        if let data = changeObject as? [AVMetadataItem] {
-            DDLogDebug("Player: metadataChange")
-            // Loop through the metadata looking for the title
-            for md in AVMetadataItem.metadataItemsFromArray(data, withKey: "title", keySpace: "comn") {
-                if let realTitle = md.stringValue {
-                    title = realTitle
-                    DDLogInfo("Player: Set title: '\(realTitle)'")
-                } else {
-                    DDLogWarn("Player: Unexpected value for title: '\(md.value)', type=\(md.dataType)")
-                }
-            }
-        } else {
-            DDLogError("Player: metadata change invalid type: \(changeObject)")
+    func metadataChange(changeObject: AnyObject?) -> String? {
+        guard let data = changeObject as? [AVMetadataItem] else {
+            return "Metadata change invalid type: '\(changeObject!)'"
         }
+
+        DDLogDebug("Player: metadataChange")
+
+        // Loop through the metadata looking for the title
+        for md in AVMetadataItem.metadataItemsFromArray(data, withKey: "title", keySpace: "comn") {
+            if let realTitle = md.stringValue {
+                title = realTitle
+                DDLogInfo("Player: Set title: '\(realTitle)'")
+            } else {
+                DDLogWarn("Player: Unexpected value for title: '\(md.value!)', type=\(md.dataType!)")
+            }
+        }
+
+        return nil
     }
 
-    func observeChange(change: [String : AnyObject]?, handler: (AnyObject) -> ()) {
-        if let changeDict = change {
-            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
-                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    if kind == NSKeyValueChange.Setting {
-                        if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                            handler(newVal)
-                        }
-                    }
-                } else {
-                    DDLogError("Player: KeyValueChange invalid value: \(kindNum)")
-                }
-            } else {
-                DDLogError("Player: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
-            }
+    func observeChange(change: [String : AnyObject]?, handler: (AnyObject?) -> String?) -> String? {
+
+        guard let changeDict = change else {
+            return "KeyValueChange change invalid '\(change!)'"
         }
+
+        guard let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber else {
+            return "KeyValueChange value invalid: '\(changeDict[NSKeyValueChangeKindKey]!)'"
+        }
+
+        guard let kind = NSKeyValueChange(rawValue: UInt(kindNum)) else {
+            return "KeyValueChange change kind invalid: '\(kindNum.stringValue)'"
+        }
+
+        guard kind == NSKeyValueChange.Setting else {
+            return "KeyValueChange unexpected change kind: '\(kind)'"
+        }
+
+        // Working code begins here ...
+        return handler(changeDict[NSKeyValueChangeNewKey])
     }
 
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if let thisPath = keyPath {
-            if object === _player {
-                switch thisPath {
-                case "status":
-                    observeChange(change, handler: statusChange)
-                case "currentItem.timedMetadata":
-                    observeChange(change, handler: metadataChange)
-                default:
-                    DDLogError("Player: Got value change for unknown: \(thisPath)")
-                }
-            } else {
-                DDLogError("Player: Unknown observed object \(object)")
-            }
-        } else {
+
+        guard let thisPath = keyPath else {
             DDLogError("Player: Got nil key for value change")
+            return
+        }
+
+        guard object === _player else {
+            DDLogError("Player: Unknown observed object '\(object!)'")
+            return
+        }
+
+        let result: String?
+
+        switch thisPath {
+        case "status":
+            result = observeChange(change, handler: statusChange)
+
+        case "currentItem.timedMetadata":
+            result = observeChange(change, handler: metadataChange)
+
+        default:
+            result = "KeyValueChange got value change for unknown key '\(thisPath)'"
+
+        }
+        if result != nil {
+            DDLogError("Player: \(result!) for key change: \(thisPath)")
         }
     }
+
 
 }
