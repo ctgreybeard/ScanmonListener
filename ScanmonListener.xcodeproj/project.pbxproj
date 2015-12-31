@@ -42,6 +42,7 @@
 /* Begin PBXFileReference section */
 		0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SMLLogScrollView.swift; sourceTree = "<group>"; };
 		0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SMLPlayStream.swift; sourceTree = "<group>"; };
+		0F6CD8631C34D7FF00BC7D00 /* SMLPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; name = SMLPlayground.playground; path = ../SMLPlayground.playground; sourceTree = "<group>"; };
 		0FBEBA7B1C3194330048343D /* ScanmonListener.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScanmonListener.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FBEBA7E1C3194330048343D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0FBEBA801C3194330048343D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -98,6 +99,7 @@
 		0FBEBA721C3194330048343D = {
 			isa = PBXGroup;
 			children = (
+				0F6CD8631C34D7FF00BC7D00 /* SMLPlayground.playground */,
 				0FBEBA7D1C3194330048343D /* ScanmonListener */,
 				0FBEBA951C3194330048343D /* ScanmonListenerTests */,
 				0FBEBAA01C3194330048343D /* ScanmonListenerUITests */,

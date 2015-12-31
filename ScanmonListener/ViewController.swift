@@ -202,63 +202,81 @@ class ViewController: UIViewController {
     }
 
     func titleChange(changeObject: AnyObject) {
-        if let newTitle = changeObject as? String {
-            DDLogInfo("View: title set: \(newTitle)")
-            currentTitle.text = newTitle
-        } else {
+
+        guard let newTitle = changeObject as? String else {
             DDLogError("View: Title change invalid type: \(changeObject)")
+            return
         }
+
+        DDLogInfo("View: title set: \(newTitle)")
+        currentTitle.text = newTitle
     }
 
     func timeChange(changeObject: AnyObject) {
-        if let newTime = changeObject as? NSNumber {
-            // DDLogDebug("View: time set: \(newTime)")
-            if let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) {
-                statusMessage.text = "Time: \(strTime)"
-            }
-        } else {
+
+        guard let newTime = changeObject as? NSNumber else {
             DDLogError("View: Time change invalid type: \(changeObject)")
+            return
+        }
+
+        if let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) {
+            statusMessage.text = "Time: \(strTime)"
         }
     }
 
-    func observeChange(change: [String : AnyObject]?, handler: (AnyObject) -> ()) {
-        if let changeDict = change {
-            if let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber {
-                if let kind = NSKeyValueChange(rawValue: UInt(kindNum)) {
-                    if kind == NSKeyValueChange.Setting {
-                        if let newVal = changeDict[NSKeyValueChangeNewKey] {
-                            // DDLogDebug("View: time set: \(newTime)")
-                            handler(newVal)
-                        }
-                    }
-                } else {
-                    DDLogError("View: KeyValueChange invalid value: \(kindNum)")
-                }
+    func observeChange(change: [String : AnyObject]?, handler: (AnyObject) -> ()) -> String? {
+
+        guard let changeDict = change else {
+            return "status change invalid \(change)"
+        }
+
+        guard let kindNum = changeDict[NSKeyValueChangeKindKey] as? NSNumber else {
+            return "KeyValueChange invalid value: \(changeDict[NSKeyValueChangeKindKey])"
+        }
+
+        guard let kind = NSKeyValueChange(rawValue: UInt(kindNum)) else {
+            return "Invalid ChangeKind: \(kindNum)"
+        }
+
+        // Working code begins here ...
+        if kind == NSKeyValueChange.Setting {
+            if let newVal = changeDict[NSKeyValueChangeNewKey] {
+                handler(newVal)
             } else {
-                DDLogError("View: status change invalid \(changeDict[NSKeyValueChangeKindKey])")
+                return "No new value found"
             }
         }
+
+        return nil
     }
 
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if let thisPath = keyPath {
-            // DDLogDebug("View: Observed value change for \(thisPath)")
-            if object === playStream {
-                switch thisPath {
-                case "statusRaw":
-                    observeChange(change, handler: statusChange)
-                case "title":
-                    observeChange(change, handler: titleChange)
-                case "time":
-                    observeChange(change, handler: timeChange)
-                default:
-                    DDLogError("View: Got value change for unknown: \(thisPath)")
-                }
-            } else {
-                DDLogError("View: Unknown observed object \(object)")
-            }
-        } else {
-            DDLogError("View: Got nil key for value change")
+
+        guard let thisPath = keyPath else {
+            DDLogError("View: Got nil keyPath for value change")
+            return
+        }
+
+        guard object === playStream else {
+            DDLogError("View: Unknown observed object \(object)")
+            return
+        }
+
+        let result: String?
+
+        switch thisPath {
+        case "statusRaw":
+            result = observeChange(change, handler: statusChange)
+        case "title":
+            result = observeChange(change, handler: titleChange)
+        case "time":
+            result = observeChange(change, handler: timeChange)
+        default:
+            result = "Got value change for unknown"
+        }
+
+        if result != nil {
+            DDLogError("View: \(result!) for key change: \(thisPath)")
         }
     }
 }
