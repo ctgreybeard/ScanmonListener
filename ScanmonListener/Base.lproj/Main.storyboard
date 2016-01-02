@@ -9,12 +9,12 @@
         <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="ScanmonListener" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="SMLViewController" customModule="ScanmonListener" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC" customClass="UIScrollView">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -91,6 +91,14 @@
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Aro-cX-TRn">
+                                <rect key="frame" x="140" y="324" width="320" height="40"/>
+                                <color key="backgroundColor" red="0.57155849955148064" green="0.77118750000000003" blue="0.7683107118424074" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="rwM-9o-bZX"/>
+                                    <constraint firstAttribute="width" constant="320" id="v1h-tp-vP6"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
@@ -101,11 +109,13 @@
                             <constraint firstItem="h3x-NB-Es3" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="topMargin" constant="12" id="AyS-4R-HgR"/>
                             <constraint firstItem="IPA-ek-2Fn" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="40" id="Ekv-oE-rHx"/>
                             <constraint firstItem="zqw-UX-mEZ" firstAttribute="top" secondItem="h3x-NB-Es3" secondAttribute="bottom" constant="8" id="Gnq-lo-9TT"/>
+                            <constraint firstItem="Aro-cX-TRn" firstAttribute="top" secondItem="rac-Nf-9Xy" secondAttribute="bottom" constant="8" id="HEb-7i-76o"/>
                             <constraint firstItem="Phq-RV-u4z" firstAttribute="top" secondItem="zqw-UX-mEZ" secondAttribute="bottom" constant="14" id="IhF-89-jOf"/>
                             <constraint firstItem="9U6-Kk-ZKo" firstAttribute="trailing" secondItem="IPA-ek-2Fn" secondAttribute="trailing" id="QQS-RM-Utk"/>
                             <constraint firstItem="zqw-UX-mEZ" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="RZv-cq-87A"/>
                             <constraint firstItem="rac-Nf-9Xy" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="S3w-dj-mAU"/>
                             <constraint firstItem="h3x-NB-Es3" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="bDT-lM-Nk9"/>
+                            <constraint firstItem="Aro-cX-TRn" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="c7C-wG-XsR"/>
                             <constraint firstItem="Phq-RV-u4z" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="efV-TX-0PQ"/>
                             <constraint firstItem="IPA-ek-2Fn" firstAttribute="top" secondItem="9U6-Kk-ZKo" secondAttribute="bottom" constant="8" id="jFs-Vw-J9s"/>
                             <constraint firstItem="zqw-UX-mEZ" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="10" id="lxC-ph-sRZ"/>
@@ -118,6 +128,7 @@
                     </view>
                     <connections>
                         <outlet property="currentTitle" destination="zqw-UX-mEZ" id="zJU-jc-pF1"/>
+                        <outlet property="mpVolumeParent" destination="Aro-cX-TRn" id="ZW2-Y6-sN8"/>
                         <outlet property="playButton" destination="rac-Nf-9Xy" id="CUP-np-h0K"/>
                         <outlet property="statusLog" destination="Phq-RV-u4z" id="e3D-e4-Co2"/>
                         <outlet property="statusMessage" destination="9U6-Kk-ZKo" id="RR0-OQ-Pdd"/>

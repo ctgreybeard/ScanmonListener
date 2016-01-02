@@ -7,12 +7,15 @@
 //
 
 import UIKit
+import MediaPlayer
 
 import CocoaLumberjack
+import AVFoundation
 
-class ViewController: UIViewController {
+class SMLViewController: UIViewController {
 
 
+    @IBOutlet weak var mpVolumeParent: UIView!
     @IBOutlet weak var statusMessage: UILabel!
     @IBOutlet weak var statusLog: SMLLogScrollView!
     @IBOutlet weak var streamURL: UITextField!
@@ -20,9 +23,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var playButton: UIButton!
 
     var currentURL = "http://www.greybeard.org/scanner"
-    var playStream: SMLPlayStream?
+    var playStream: SMLPlayStream!
     var activity: NSObjectProtocol?
-    var buttonTitle = "Ready" {
+    dynamic var buttonTitle = "Ready" {
         didSet {
             playButton.setTitle(buttonTitle, forState: [.Normal])
             DDLogDebug("View: button set: '\(buttonTitle)'")
@@ -35,6 +38,8 @@ class ViewController: UIViewController {
 
     // Internal variables
     let timeFormatter = NSDateComponentsFormatter()
+    var avSession: AVAudioSession!
+    let app = UIApplication.sharedApplication().delegate as! AppDelegate
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,14 +50,19 @@ class ViewController: UIViewController {
         self.streamURL.text = currentURL
         playButton.titleLabel?.adjustsFontSizeToFitWidth = true
         playButton.titleLabel?.minimumScaleFactor = 0.5
-        if let myView = view as? UIScrollView {
-            DDLogDebug("View: scrolling enabled: \(myView.scrollEnabled)")
-        }
+
+        //mpVolumeParent.backgroundColor = UIColor.clearColor()
+        let vbounds = mpVolumeParent.bounds.insetBy(dx: 8.0, dy: 8.0)
+        mpVolumeParent.addSubview(MPVolumeView(frame: vbounds))
+        weak var volView: MPVolumeView! = mpVolumeParent.subviews[0] as? MPVolumeView
+        volView?.showsRouteButton = true
 
         // Initialize the time formatter
         timeFormatter.allowedUnits = [.Hour, .Minute, .Second]
         timeFormatter.unitsStyle = .Abbreviated
         timeFormatter.zeroFormattingBehavior = .DropLeading
+
+        avSession = app.avSession
     }
 
     override func didReceiveMemoryWarning() {
@@ -81,19 +91,29 @@ class ViewController: UIViewController {
 
         if playStream == nil {
             playStream = SMLPlayStream()
-            playStream?.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
-            playStream?.addObserver(self, forKeyPath: "title", options: .New, context: nil)
-            playStream?.addObserver(self, forKeyPath: "time", options: .New, context: nil)
-            playStream?.addObserver(self, forKeyPath: "logentry", options: .New, context: nil)
+            playStream.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
+            playStream.addObserver(self, forKeyPath: "title", options: .New, context: nil)
+            playStream.addObserver(self, forKeyPath: "time", options: .New, context: nil)
+            playStream.addObserver(self, forKeyPath: "logentry", options: .New, context: nil)
 
-            willStart = playStream?.play(currentURL) ?? false
+            do {
+                try avSession.setActive(true)
 
-            if willStart {
-                activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled, .IdleSystemSleepDisabled], reason: "Play started")
-                buttonTitle = startTitle
+                willStart = playStream.play(currentURL)
+
+                if willStart {
+                    activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled], reason: "Play started")
+                    buttonTitle = startTitle
+                }
+            } catch {
+                let emsg = "Can't start audio session: \(error)"
+                DDLogError("View: \(emsg)")
+                statusLog.appendLine(emsg)
             }
         } else {
-            DDLogError("View: Play requested but already playing!")
+            let emsg = "Play requested but already playing!"
+            DDLogError("View: \(emsg)")
+            statusLog.appendLine(emsg)
             buttonTitle = stopTitle
         }
 

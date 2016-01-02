@@ -16,6 +16,7 @@ import CocoaLumberjack
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    let avSession = AVAudioSession.sharedInstance()
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
 
@@ -28,19 +29,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         DDLogInfo("Application starting!")
 
         // Establish the Audio Session
-        let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try avSession.setCategory(AVAudioSessionCategoryPlayback)
+            try avSession.setMode(AVAudioSessionModeSpokenAudio)
+            try avSession.setActive(false)
         }
         catch {
-            DDLogError("App: audioSession category error: \(error))")
-        }
-
-        do {
-            try audioSession.setMode(AVAudioSessionModeSpokenAudio)
-        }
-        catch {
-            DDLogError("App: audioSession mode error: \(error))")
+            DDLogError("App: audioSession error: \(error))")
         }
 
         return true
