@@ -31,7 +31,7 @@ class SMLPlayStream: NSObject {
 
     var status: PlayStatus = .Ready {
         didSet {
-            DDLogDebug("Player: status set: \(status.rawValue)")
+            DDLogDebug("Player(\(__LINE__)): status set: \(status.rawValue)")
             statusRaw = status.rawValue
         }
     }
@@ -43,18 +43,17 @@ class SMLPlayStream: NSObject {
     // Private instance variables
     private var timeObserver: AnyObject?
     let aSess = AVAudioSession.sharedInstance()
-    var activity: NSObjectProtocol?
 
     dynamic func audioNotification(note: NSNotification) {
 
-        DDLogDebug("Player: audioNotification: name: '\(note.name)'")
+        DDLogDebug("Player(\(__LINE__)): audioNotification: name: '\(note.name)'")
         let name = note.name
 
-        DDLogDebug("Player: audioNotification: object: '\(note.object!)'")
+        DDLogDebug("Player(\(__LINE__)): audioNotification: object: '\(note.object!)'")
 
         var userInfo: [NSObject: AnyObject]
         if note.userInfo != nil {
-            DDLogDebug("Player: audioNotification: userinfo: '\(note.userInfo!)'")
+            DDLogDebug("Player(\(__LINE__)): audioNotification: userinfo: '\(note.userInfo!)'")
             userInfo = note.userInfo!
         } else {
             userInfo = [NSObject: AnyObject]()
@@ -62,16 +61,16 @@ class SMLPlayStream: NSObject {
 
         if name == AVFoundation.AVAudioSessionRouteChangeNotification {
             guard let reasonNum = userInfo[AVFoundation.AVAudioSessionRouteChangeReasonKey] as? NSNumber else {
-                DDLogError("Player: audioNotification: ChangeReason not valid: \(userInfo["AVAudioSessionRouteChangeReasonKey"])")
+                DDLogError("Player(\(__LINE__)): audioNotification: ChangeReason not valid: \(userInfo["AVAudioSessionRouteChangeReasonKey"])")
                 return
             }
 
             guard let reason = AVAudioSessionRouteChangeReason(rawValue: UInt(reasonNum)) where reasonNum.intValue >= 0  else {
-                DDLogError("Player: audioNotification: ChangeReason not valid")
+                DDLogError("Player(\(__LINE__)): audioNotification: ChangeReason not valid")
                 return
             }
 
-            DDLogDebug("Player: audioNotification: reason: \(reason) (\(reason.rawValue))")
+            DDLogDebug("Player(\(__LINE__)): audioNotification: reason: \(reason) (\(reason.rawValue))")
 
             var oldRoute = "Unknown"
             var newRoute = "Unknown"
@@ -87,10 +86,10 @@ class SMLPlayStream: NSObject {
                 newRoute = newDesc.outputs[0].portName
             }
 
-            DDLogDebug("Player: audioNotification: route change: old: \(oldRoute), new: \(newRoute)")
+            DDLogDebug("Player(\(__LINE__)): audioNotification: route change: old: \(oldRoute), new: \(newRoute)")
 
             // AVPlayer maybe pauses on audio route change (unplug headset, etc.)
-            DDLogDebug("Player: audioNotification: current rate: \(_player!.rate)")
+            DDLogDebug("Player(\(__LINE__)): audioNotification: current rate: \(_player!.rate)")
 
             if _player!.rate == 0.0 {
                 dispatch_async(dispatch_get_main_queue(), {
@@ -110,7 +109,7 @@ class SMLPlayStream: NSObject {
         } else if name == AVFoundation.AVAudioSessionInterruptionNotification {
 
             guard let type = userInfo[AVAudioSessionInterruptionTypeKey] as? AVAudioSessionInterruptionType else {
-                DDLogError("Player: Interruption type not valid: \(userInfo[AVAudioSessionInterruptionTypeKey])")
+                DDLogError("Player(\(__LINE__)): Interruption type not valid: \(userInfo[AVAudioSessionInterruptionTypeKey])")
                 return
             }
 
@@ -121,7 +120,7 @@ class SMLPlayStream: NSObject {
             case .Ended:
                 typeDesc = "Ended"
             }
-            DDLogInfo("Player: Interruption type: \(typeDesc), our status: \(status.rawValue), player status: \(_player?.status.rawValue)")
+            DDLogInfo("Player(\(__LINE__)): Interruption type: \(typeDesc), our status: \(status.rawValue), player status: \(_player?.status.rawValue)")
 
             switch type {
             case .Began:
@@ -136,15 +135,15 @@ class SMLPlayStream: NSObject {
                         status = .Playing
                         _player?.play()
                     default:
-                        DDLogError("Player: Unknown interruption option: \(option.rawValue)")
+                        DDLogError("Player(\(__LINE__)): Unknown interruption option: \(option.rawValue)")
                     }
                 } else {
-                    DDLogError("Player: No options found in interruption")
+                    DDLogError("Player(\(__LINE__)): No options found in interruption")
                 }
             }
 
         } else {
-            DDLogWarn("Player: Unhandled Notification: \(name)")
+            DDLogWarn("Player(\(__LINE__)): Unhandled Notification: \(name)")
         }
     }
 
@@ -178,34 +177,27 @@ class SMLPlayStream: NSObject {
             do {
                 try aSess.setActive(true)
 
-                activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled], reason: "Play started")
-                if activity == nil {
-                    DDLogError("Player: beginActivity Failed!")
-                } else {
-                    DDLogInfo("Player: activity started")
+                // Set up notifications
+                NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: aSess)
+                if _player?.currentItem != nil {
+                    NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: _player!.currentItem!)
                 }
 
+                ok = true
             }
             catch {
-                DDLogError("Player: Audio session set Active failed: \(error)")
+                DDLogError("Player(\(__LINE__)): Audio session set Active failed: \(error)")
             }
 
-            // Set up notifications
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: aSess)
-            if _player?.currentItem != nil {
-                NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: _player!.currentItem!)
-            }
-
-            ok = true
         } else {
-            DDLogError("Player: Create URL failed")
+            DDLogError("Player(\(__LINE__)): Create URL failed")
         }
 
         return ok
     }
 
     dynamic func stop(reason: String) {
-        DDLogInfo("Player: Stopping")
+        DDLogInfo("Player(\(__LINE__)): Stopping")
         logentry = "Stopped: \(reason)"
 
         _player?.pause()
@@ -224,17 +216,8 @@ class SMLPlayStream: NSObject {
             try AVAudioSession.sharedInstance().setActive(false)
         }
         catch {
-            DDLogError("Player: Audio session set Inactive failed: \(error)")
+            DDLogError("Player(\(__LINE__)): Audio session set Inactive failed: \(error)")
         }
-
-        if (activity != nil) {
-            NSProcessInfo.processInfo().endActivity(activity!)
-            activity = nil
-            DDLogInfo("Player: activity ended")
-        } else {
-            DDLogError("Player: Unexpected nil for activity")
-        }
-
     }
 
     dynamic var playing: Bool {
@@ -257,7 +240,7 @@ class SMLPlayStream: NSObject {
             return "Status change invalid type: '\(changeObject!)'"
         }
 
-        DDLogDebug("Player: statusChange")
+        DDLogDebug("Player(\(__LINE__)): statusChange")
 
         guard let status = AVPlayerStatus(rawValue: newStatus) else {
             return "Invalid AVPlayerStatus value: '\(newStatus)'"
@@ -270,13 +253,13 @@ class SMLPlayStream: NSObject {
             error = "Status change to 'Unknown'"
 
         case .ReadyToPlay:
-            DDLogInfo("Player: status change to ReadyToPlay")
+            DDLogInfo("Player(\(__LINE__)): status change to ReadyToPlay")
             _player?.play()
             self.status = .Playing
             error = nil
 
         case .Failed:
-            DDLogInfo("Player: status change to Failed: \(_player?.error!)")
+            DDLogInfo("Player(\(__LINE__)): status change to Failed: \(_player?.error!)")
             self.status = .Failed
             error = nil
         }
@@ -289,15 +272,15 @@ class SMLPlayStream: NSObject {
             return "Metadata change invalid type: '\(changeObject!)'"
         }
 
-        DDLogDebug("Player: metadataChange")
+        DDLogDebug("Player(\(__LINE__)): metadataChange")
 
         // Loop through the metadata looking for the title
         for md in AVMetadataItem.metadataItemsFromArray(data, withKey: "title", keySpace: "comn") {
             if let realTitle = md.stringValue {
                 title = realTitle
-                DDLogInfo("Player: Set title: '\(realTitle)'")
+                DDLogInfo("Player(\(__LINE__)): Set title: '\(realTitle)'")
             } else {
-                DDLogWarn("Player: Unexpected value for title: '\(md.value!)', type=\(md.dataType!)")
+                DDLogWarn("Player(\(__LINE__)): Unexpected value for title: '\(md.value!)', type=\(md.dataType!)")
             }
         }
 
@@ -329,12 +312,12 @@ class SMLPlayStream: NSObject {
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
 
         guard let thisPath = keyPath else {
-            DDLogError("Player: Got nil key for value change")
+            DDLogError("Player(\(__LINE__)): Got nil key for value change")
             return
         }
 
         guard object === _player else {
-            DDLogError("Player: Unknown observed object '\(object!)'")
+            DDLogError("Player(\(__LINE__)): Unknown observed object '\(object!)'")
             return
         }
         
@@ -352,7 +335,7 @@ class SMLPlayStream: NSObject {
             
         }
         if result != nil {
-            DDLogError("Player: \(result!) for key change: \(thisPath)")
+            DDLogError("Player(\(__LINE__)): \(result!) for key change: \(thisPath)")
         }
     }
 }
