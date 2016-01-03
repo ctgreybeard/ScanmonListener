@@ -24,7 +24,6 @@ class SMLViewController: UIViewController {
 
     var currentURL = "http://www.greybeard.org/scanner"
     var playStream: SMLPlayStream!
-    var activity: NSObjectProtocol?
     dynamic var buttonTitle = "Ready" {
         didSet {
             playButton.setTitle(buttonTitle, forState: [.Normal])
@@ -99,12 +98,8 @@ class SMLViewController: UIViewController {
             do {
                 try avSession.setActive(true)
 
-                willStart = playStream.play(currentURL)
-
-                if willStart {
-                    activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled], reason: "Play started")
-                    buttonTitle = startTitle
-                }
+                playStream.play(currentURL)
+                willStart = true
             } catch {
                 let emsg = "Can't start audio session: \(error)"
                 DDLogError("View: \(emsg)")
@@ -147,10 +142,6 @@ class SMLViewController: UIViewController {
             playStream = nil
         }
 
-        if (activity != nil) {
-            NSProcessInfo.processInfo().endActivity(activity!)
-            activity = nil
-        }
     }
 
     @IBAction func buttonTouch(sender: UIButton) {
@@ -223,6 +214,8 @@ class SMLViewController: UIViewController {
         case .Failed:
             msg = "Failed"
             didFail()
+        case .Paused:
+            msg = "Paused"
         }
 
         statusMessage.text = msg

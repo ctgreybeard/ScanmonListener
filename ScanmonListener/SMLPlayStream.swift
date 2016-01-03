@@ -16,21 +16,22 @@ enum PlayStatus: String {
     case Ready = "ready"
     case Starting = "starting"
     case Playing = "playing"
+    case Paused = "paused"
     case Stopping = "stopping"
     case Stopped = "stopped"
-    case Failed = "Failed"
+    case Failed = "failed"
 }
 
 class SMLPlayStream: NSObject {
 
     var _player: AVPlayer?
     var _url: NSURL?
-    
+
     dynamic private(set) var statusRaw: String?
 
     var status: PlayStatus = .Ready {
         didSet {
-            DDLogDebug("Player: status set")
+            DDLogDebug("Player: status set: \(status.rawValue)")
             statusRaw = status.rawValue
         }
     }
@@ -41,21 +42,26 @@ class SMLPlayStream: NSObject {
 
     // Private instance variables
     private var timeObserver: AnyObject?
+    let aSess = AVAudioSession.sharedInstance()
+    var activity: NSObjectProtocol?
 
     dynamic func audioNotification(note: NSNotification) {
+
         DDLogDebug("Player: audioNotification: name: '\(note.name)'")
+        let name = note.name
+
         DDLogDebug("Player: audioNotification: object: '\(note.object!)'")
+
+        var userInfo: [NSObject: AnyObject]
         if note.userInfo != nil {
             DDLogDebug("Player: audioNotification: userinfo: '\(note.userInfo!)'")
+            userInfo = note.userInfo!
+        } else {
+            userInfo = [NSObject: AnyObject]()
         }
 
-        if note.name == "AVAudioSessionRouteChangeNotification" {
-            guard let userInfo = note.userInfo as? [String: AnyObject] else {
-                DDLogError("Player: audioNotification: userInfo not valid")
-                return
-            }
-
-            guard let reasonNum = userInfo["AVAudioSessionRouteChangeReasonKey"] as? NSNumber else {
+        if name == AVFoundation.AVAudioSessionRouteChangeNotification {
+            guard let reasonNum = userInfo[AVFoundation.AVAudioSessionRouteChangeReasonKey] as? NSNumber else {
                 DDLogError("Player: audioNotification: ChangeReason not valid: \(userInfo["AVAudioSessionRouteChangeReasonKey"])")
                 return
             }
@@ -70,7 +76,7 @@ class SMLPlayStream: NSObject {
             var oldRoute = "Unknown"
             var newRoute = "Unknown"
 
-            if let oldDesc = userInfo["AVAudioSessionRouteChangePreviousRouteKey"] as? AVAudioSessionRouteDescription {
+            if let oldDesc = userInfo[AVFoundation.AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription {
                 if oldDesc.outputs.count > 0 {
                     oldRoute = oldDesc.outputs[0].portName
                 }
@@ -92,19 +98,57 @@ class SMLPlayStream: NSObject {
                 })
             }
 
-        } else if note.name == "AVPlayerItemDidPlayToEndTimeNotification" ||        // Source was killed or client kicked
-                  note.name == "AVPlayerItemFailedToPlayToEndTimeNotification" ||   // Lost the connection?
-                  note.name == "AVPlayerItemPlaybackStalledNotification" {          // Network error?
+        } else if name == AVFoundation.AVPlayerItemDidPlayToEndTimeNotification ||        // Source was killed or client kicked
+            name == AVFoundation.AVPlayerItemFailedToPlayToEndTimeNotification ||   // Lost the connection?
+            name == AVFoundation.AVPlayerItemPlaybackStalledNotification {          // Network error?
 
-            // Lost the stream somehow
-            dispatch_async(dispatch_get_main_queue(), {
-                self.stop(note.name)
-            })
+                // Lost the stream somehow
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.stop(note.name)
+                })
 
+        } else if name == AVFoundation.AVAudioSessionInterruptionNotification {
+
+            guard let type = userInfo[AVAudioSessionInterruptionTypeKey] as? AVAudioSessionInterruptionType else {
+                DDLogError("Player: Interruption type not valid: \(userInfo[AVAudioSessionInterruptionTypeKey])")
+                return
+            }
+
+            let typeDesc: String
+            switch type {
+            case .Began:
+                typeDesc = "Began"
+            case .Ended:
+                typeDesc = "Ended"
+            }
+            DDLogInfo("Player: Interruption type: \(typeDesc), our status: \(status.rawValue), player status: \(_player?.status.rawValue)")
+
+            switch type {
+            case .Began:
+                if status == .Playing {
+                    status = .Paused
+                }
+
+            case .Ended:
+                if let option = userInfo[AVAudioSessionInterruptionOptionKey] as? AVAudioSessionInterruptionOptions {
+                    switch option {
+                    case AVAudioSessionInterruptionOptions.ShouldResume:
+                        status = .Playing
+                        _player?.play()
+                    default:
+                        DDLogError("Player: Unknown interruption option: \(option.rawValue)")
+                    }
+                } else {
+                    DDLogError("Player: No options found in interruption")
+                }
+            }
+
+        } else {
+            DDLogWarn("Player: Unhandled Notification: \(name)")
         }
     }
 
-    func play(url: String) -> Bool {
+    dynamic func play(url: String) -> Bool {
         var ok: Bool = false
 
         DDLogInfo("Player starting: \(url)")
@@ -128,12 +172,19 @@ class SMLPlayStream: NSObject {
             newPlayer.addObserver(self, forKeyPath: "status", options: [.Initial, .New], context: nil)
             newPlayer.addObserver(self, forKeyPath: "currentItem.timedMetadata", options: [.Initial, .New], context: nil)
             timeObserver = newPlayer.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil, usingBlock: {(time: CMTime) in
-                    self.time = time.seconds
-                })
+                self.time = time.seconds
+            })
 
-            let aSess = AVAudioSession.sharedInstance()
             do {
                 try aSess.setActive(true)
+
+                activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled], reason: "Play started")
+                if activity == nil {
+                    DDLogError("Player: beginActivity Failed!")
+                } else {
+                    DDLogInfo("Player: activity started")
+                }
+
             }
             catch {
                 DDLogError("Player: Audio session set Active failed: \(error)")
@@ -153,7 +204,7 @@ class SMLPlayStream: NSObject {
         return ok
     }
 
-    func stop(reason: String) {
+    dynamic func stop(reason: String) {
         DDLogInfo("Player: Stopping")
         logentry = "Stopped: \(reason)"
 
@@ -176,15 +227,23 @@ class SMLPlayStream: NSObject {
             DDLogError("Player: Audio session set Inactive failed: \(error)")
         }
 
-}
+        if (activity != nil) {
+            NSProcessInfo.processInfo().endActivity(activity!)
+            activity = nil
+            DDLogInfo("Player: activity ended")
+        } else {
+            DDLogError("Player: Unexpected nil for activity")
+        }
 
-    var playing: Bool {
+    }
+
+    dynamic var playing: Bool {
         get {
             return status == .Playing
         }
     }
 
-    var url: NSURL? {
+    dynamic var url: NSURL? {
         get {
             return _url
         }
@@ -278,24 +337,22 @@ class SMLPlayStream: NSObject {
             DDLogError("Player: Unknown observed object '\(object!)'")
             return
         }
-
+        
         let result: String?
-
+        
         switch thisPath {
         case "status":
             result = observeChange(change, handler: statusChange)
-
+            
         case "currentItem.timedMetadata":
             result = observeChange(change, handler: metadataChange)
-
+            
         default:
             result = "KeyValueChange got value change for unknown key '\(thisPath)'"
-
+            
         }
         if result != nil {
             DDLogError("Player: \(result!) for key change: \(thisPath)")
         }
     }
-
-
 }

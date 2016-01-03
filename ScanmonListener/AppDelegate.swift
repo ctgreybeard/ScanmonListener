@@ -22,11 +22,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Initialize the logger
         DDLog.addLogger(DDTTYLogger.sharedInstance())
-        DDLog.addLogger(DDASLLogger.sharedInstance())
+        // DDLog.addLogger(DDASLLogger.sharedInstance())
+        let docsDirs = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
+        if docsDirs.count > 0 {
+            let fileLogManager = DDLogFileManagerDefault(logsDirectory: docsDirs[0])
+            fileLogManager.maximumNumberOfLogFiles = 5
+            let fileLogger = DDFileLogger(logFileManager: fileLogManager)
+            fileLogger.maximumFileSize = 10000000
+            fileLogger.rollingFrequency = NSTimeInterval(24 * 60 * 60)
+            DDLog.addLogger(fileLogger)
+        }
         DDTTYLogger.sharedInstance().colorsEnabled = true
         let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
         DDLogInfo("Application starting!")
+        DDLogInfo("Documents directory: \(NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true))")
 
         // Establish the Audio Session
         do {
