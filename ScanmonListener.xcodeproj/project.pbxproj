@@ -10,7 +10,7 @@
 		0F3E2DF41C31E2E9002E6AFE /* SMLLogScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */; };
 		0F3E2DF61C31F775002E6AFE /* SMLPlayStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */; };
 		0FBEBA7F1C3194330048343D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA7E1C3194330048343D /* AppDelegate.swift */; };
-		0FBEBA811C3194330048343D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA801C3194330048343D /* ViewController.swift */; };
+		0FBEBA811C3194330048343D /* SMLViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA801C3194330048343D /* SMLViewController.swift */; };
 		0FBEBA841C3194330048343D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0FBEBA821C3194330048343D /* Main.storyboard */; };
 		0FBEBA871C3194330048343D /* ScanmonListener.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA851C3194330048343D /* ScanmonListener.xcdatamodeld */; };
 		0FBEBA891C3194330048343D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0FBEBA881C3194330048343D /* Assets.xcassets */; };
@@ -45,7 +45,7 @@
 		0F6CD8631C34D7FF00BC7D00 /* SMLPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; name = SMLPlayground.playground; path = ../SMLPlayground.playground; sourceTree = "<group>"; };
 		0FBEBA7B1C3194330048343D /* ScanmonListener.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScanmonListener.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FBEBA7E1C3194330048343D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		0FBEBA801C3194330048343D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		0FBEBA801C3194330048343D /* SMLViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMLViewController.swift; sourceTree = "<group>"; };
 		0FBEBA831C3194330048343D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		0FBEBA861C3194330048343D /* ScanmonListener.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ScanmonListener.xcdatamodel; sourceTree = "<group>"; };
 		0FBEBA881C3194330048343D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -124,7 +124,7 @@
 			children = (
 				0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */,
 				0FBEBA7E1C3194330048343D /* AppDelegate.swift */,
-				0FBEBA801C3194330048343D /* ViewController.swift */,
+				0FBEBA801C3194330048343D /* SMLViewController.swift */,
 				0FBEBA821C3194330048343D /* Main.storyboard */,
 				0FBEBA881C3194330048343D /* Assets.xcassets */,
 				0FBEBA8A1C3194330048343D /* LaunchScreen.storyboard */,
@@ -440,7 +440,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0FBEBA871C3194330048343D /* ScanmonListener.xcdatamodeld in Sources */,
-				0FBEBA811C3194330048343D /* ViewController.swift in Sources */,
+				0FBEBA811C3194330048343D /* SMLViewController.swift in Sources */,
 				0F3E2DF41C31E2E9002E6AFE /* SMLLogScrollView.swift in Sources */,
 				0FBEBA7F1C3194330048343D /* AppDelegate.swift in Sources */,
 				0F3E2DF61C31F775002E6AFE /* SMLPlayStream.swift in Sources */,
