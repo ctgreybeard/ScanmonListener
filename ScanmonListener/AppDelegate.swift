@@ -21,8 +21,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
 
         // Initialize the logger
-        DDLog.addLogger(DDTTYLogger.sharedInstance())
-        // DDLog.addLogger(DDASLLogger.sharedInstance())
+        let testLogLevel = DDLogLevel.Verbose
+        let fileLogLevel = DDLogLevel.Info
+
+        DDLog.addLogger(DDTTYLogger.sharedInstance(), withLevel: testLogLevel)
+
         let docsDirs = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
         if docsDirs.count > 0 {
             let fileLogManager = DDLogFileManagerDefault(logsDirectory: docsDirs[0])
@@ -30,12 +33,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let fileLogger = DDFileLogger(logFileManager: fileLogManager)
             fileLogger.maximumFileSize = 10000000
             fileLogger.rollingFrequency = NSTimeInterval(24 * 60 * 60)
-            DDLog.addLogger(fileLogger)
+            DDLog.addLogger(fileLogger, withLevel: fileLogLevel)
         }
+
         DDTTYLogger.sharedInstance().colorsEnabled = true
         let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
-        DDLogInfo("Application starting!")
+
+        DDLogInfo("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__)): launchOptions:\(launchOptions)")
+
         DDLogInfo("Documents directory: \(NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true))")
 
         // Establish the Audio Session
@@ -54,30 +60,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillResignActive(application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-        DDLogInfo("Application will resign!")
+        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
     }
 
     func applicationDidEnterBackground(application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-        DDLogInfo("Application in background!")
+        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
         // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
-        DDLogInfo("Application going foreground!")
+        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-        DDLogInfo("Application now active!")
+        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
     }
 
     func applicationWillTerminate(application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
+        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
         self.saveContext()
-        DDLogInfo("Application Terminating!")
     }
 
     // MARK: - Core Data stack

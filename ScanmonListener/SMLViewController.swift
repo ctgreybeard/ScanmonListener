@@ -40,6 +40,7 @@ class SMLViewController: UIViewController {
     var avSession: AVAudioSession!
     let app = UIApplication.sharedApplication().delegate as! AppDelegate
     var activity: NSObjectProtocol!
+    var mpVV: MPVolumeView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,16 +48,16 @@ class SMLViewController: UIViewController {
         DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
 
         self.currentTitle.text = "Fire/EMS"
-        self.statusLog.text = "Application started"
+        self.statusLog.text = "Application started\n"
         self.streamURL.text = currentURL
         playButton.titleLabel?.adjustsFontSizeToFitWidth = true
         playButton.titleLabel?.minimumScaleFactor = 0.5
 
-        //mpVolumeParent.backgroundColor = UIColor.clearColor()
-        let vbounds = mpVolumeParent.bounds.insetBy(dx: 8.0, dy: 8.0)
-        mpVolumeParent.addSubview(MPVolumeView(frame: vbounds))
-        weak var volView: MPVolumeView! = mpVolumeParent.subviews[0] as? MPVolumeView
-        volView?.showsRouteButton = true
+        let mpVVbounds = mpVolumeParent.bounds.insetBy(dx: 4.0, dy: 10.0)
+        mpVV = MPVolumeView(frame: mpVVbounds)
+        mpVV.translatesAutoresizingMaskIntoConstraints = false
+
+        mpVolumeParent.addSubview(mpVV)
 
         // Initialize the time formatter
         timeFormatter.allowedUnits = [.Hour, .Minute, .Second]
