@@ -39,7 +39,6 @@ class SMLViewController: UIViewController {
     let timeFormatter = NSDateComponentsFormatter()
     var avSession: AVAudioSession!
     let app = UIApplication.sharedApplication().delegate as! AppDelegate
-    var activity: NSObjectProtocol!
     var mpVV: MPVolumeView!
     
     override func viewDidLoad() {
@@ -126,7 +125,7 @@ class SMLViewController: UIViewController {
         buttonTitle = stopTitle
 
         // Begin our activity
-        activity = NSProcessInfo.processInfo().beginActivityWithOptions([.UserInitiated, .IdleDisplaySleepDisabled], reason: "Started playing")
+        UIApplication.sharedApplication().idleTimerDisabled = true
         DDLogInfo("View(\(__LINE__)): Activity started")
     }
 
@@ -152,10 +151,7 @@ class SMLViewController: UIViewController {
             playStream = nil
         }
 
-        if activity != nil {
-            NSProcessInfo.processInfo().endActivity(activity)
-            DDLogInfo("View(\(__LINE__)): Activity ended")
-        }
+        UIApplication.sharedApplication().idleTimerDisabled = false
 
     }
 
