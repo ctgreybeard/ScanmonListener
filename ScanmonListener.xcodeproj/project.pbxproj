@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0F38B7661C401229001800DE /* Defaults.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0F38B7651C401229001800DE /* Defaults.plist */; };
+		0F38B7681C4039A1001800DE /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 0F38B7671C4039A1001800DE /* Settings.bundle */; };
 		0F3E2DF41C31E2E9002E6AFE /* SMLLogScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */; };
 		0F3E2DF61C31F775002E6AFE /* SMLPlayStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */; };
 		0FBEBA7F1C3194330048343D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA7E1C3194330048343D /* AppDelegate.swift */; };
@@ -40,6 +42,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0F38B7651C401229001800DE /* Defaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Defaults.plist; sourceTree = "<group>"; };
+		0F38B7671C4039A1001800DE /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SMLLogScrollView.swift; sourceTree = "<group>"; };
 		0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SMLPlayStream.swift; sourceTree = "<group>"; };
 		0F6CD8631C34D7FF00BC7D00 /* SMLPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; name = SMLPlayground.playground; path = ../SMLPlayground.playground; sourceTree = "<group>"; };
@@ -131,6 +135,8 @@
 				0FBEBA8D1C3194330048343D /* Info.plist */,
 				0FBEBA851C3194330048343D /* ScanmonListener.xcdatamodeld */,
 				0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */,
+				0F38B7651C401229001800DE /* Defaults.plist */,
+				0F38B7671C4039A1001800DE /* Settings.bundle */,
 			);
 			path = ScanmonListener;
 			sourceTree = "<group>";
@@ -289,7 +295,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F38B7661C401229001800DE /* Defaults.plist in Resources */,
 				0FBEBA8C1C3194330048343D /* LaunchScreen.storyboard in Resources */,
+				0F38B7681C4039A1001800DE /* Settings.bundle in Resources */,
 				0FBEBA891C3194330048343D /* Assets.xcassets in Resources */,
 				0FBEBA841C3194330048343D /* Main.storyboard in Resources */,
 			);

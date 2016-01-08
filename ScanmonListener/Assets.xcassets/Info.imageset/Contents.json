@@ -2,14 +2,17 @@
   "images" : [
     {
       "idiom" : "universal",
+      "filename" : "Help-28x28.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
+      "filename" : "Help-56x56.png",
       "scale" : "2x"
     },
     {
       "idiom" : "universal",
+      "filename" : "Help-84x84.png",
       "scale" : "3x"
     }
   ],

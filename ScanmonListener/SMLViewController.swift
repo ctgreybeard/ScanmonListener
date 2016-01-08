@@ -21,6 +21,8 @@ class SMLViewController: UIViewController {
     @IBOutlet weak var streamURL: UITextField!
     @IBOutlet weak var currentTitle: UILabel!
     @IBOutlet weak var playButton: UIButton!
+    @IBOutlet weak var settingsButton: UIButton!
+    @IBOutlet weak var helpButton: UIButton!
 
     var currentURL = "http://www.greybeard.org/scanner"
     var playStream: SMLPlayStream!
@@ -161,6 +163,7 @@ class SMLViewController: UIViewController {
 
     @IBAction func buttonTouch(sender: UIButton) {
         DDLogDebug("Entry")
+        if sender === playButton {
         if let thisTitle = sender.currentTitle {
             if thisTitle == "Play" {
                 if doPlay() {
@@ -178,7 +181,15 @@ class SMLViewController: UIViewController {
             DDLogError("No button tile!")
             sender.setTitle("HUH!?", forState: UIControlState.Normal)
         }
+        } else if sender === settingsButton {
+
+        } else if sender === helpButton {
+
+        } else {
+            DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
+        }
     }
+
     @IBAction func urlUpdated(sender: UITextField) {
         DDLogDebug("Entry")
         if let newURL = sender.text {

@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
     var window: UIWindow?
     let avSession = AVAudioSession.sharedInstance()
     let logDateFormat = NSDateFormatter()
+    dynamic var preferences: NSUserDefaults! = nil
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
 
@@ -46,6 +47,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
         DDLogInfo("launchOptions:\(launchOptions)")
 
         DDLogInfo("Documents directory: \(NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true))")
+
+        loadPrefs()
+        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__)): default for backgroundAudio: \(preferences.boolForKey("backgroundAudio"))")
 
         // Establish the Audio Session
         do {
@@ -87,6 +91,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
         // Saves changes in the application's managed object context before the application terminates.
         DDLogDebug("Entry")
         self.saveContext()
+    }
+
+    func loadPrefs() {
+        preferences = NSUserDefaults.standardUserDefaults()
+
+        // Load defaults
+        let mainBundle = NSBundle.mainBundle()
+        if let defsPath = mainBundle.pathForResource("Defaults", ofType: "plist") {
+            if let defStream = NSInputStream(fileAtPath: defsPath) {
+                defStream.open()
+                do {
+                    let defPlist = try NSPropertyListSerialization.propertyListWithStream(defStream, options: .Immutable, format: nil)
+                    preferences.registerDefaults(defPlist as! [String : AnyObject])
+                } catch {
+                    DDLogError("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__)): Default properties read error: \(error)")
+                }
+                defStream.close()
+            }
+        } else {
+            DDLogError("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__)): Cannot find Defalts.plist")
+        }
     }
 
     // MARK: - Core Data stack
