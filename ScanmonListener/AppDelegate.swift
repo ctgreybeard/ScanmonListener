@@ -13,34 +13,37 @@ import AVFoundation
 import CocoaLumberjack
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
 
     var window: UIWindow?
     let avSession = AVAudioSession.sharedInstance()
+    let logDateFormat = NSDateFormatter()
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+
+        // Initialize the date/time formatter
+        logDateFormat.dateFormat = "ddMMMyyyy hh:mm:ss.SSS"
 
         // Initialize the logger
         let testLogLevel = DDLogLevel.Verbose
         let fileLogLevel = DDLogLevel.Info
 
+        DDTTYLogger.sharedInstance().logFormatter = self
         DDLog.addLogger(DDTTYLogger.sharedInstance(), withLevel: testLogLevel)
 
-        let docsDirs = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
-        if docsDirs.count > 0 {
-            let fileLogManager = DDLogFileManagerDefault(logsDirectory: docsDirs[0])
-            fileLogManager.maximumNumberOfLogFiles = 5
-            let fileLogger = DDFileLogger(logFileManager: fileLogManager)
-            fileLogger.maximumFileSize = 10000000
-            fileLogger.rollingFrequency = NSTimeInterval(24 * 60 * 60)
-            DDLog.addLogger(fileLogger, withLevel: fileLogLevel)
-        }
+        let fileLogManager = DDLogFileManagerDefault(logsDirectory: applicationDocumentsDirectory.path)
+        fileLogManager.maximumNumberOfLogFiles = 5
+        let fileLogger = DDFileLogger(logFileManager: fileLogManager)
+        fileLogger.maximumFileSize = 10000000
+        fileLogger.rollingFrequency = NSTimeInterval(24 * 60 * 60)
+        fileLogger.logFormatter = self
+        DDLog.addLogger(fileLogger, withLevel: fileLogLevel)
 
         DDTTYLogger.sharedInstance().colorsEnabled = true
         let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
 
-        DDLogInfo("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__)): launchOptions:\(launchOptions)")
+        DDLogInfo("launchOptions:\(launchOptions)")
 
         DDLogInfo("Documents directory: \(NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true))")
 
@@ -51,7 +54,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             try avSession.setActive(false)
         }
         catch {
-            DDLogError("App: audioSession error: \(error))")
+            DDLogError("audioSession error: \(error))")
         }
 
         return true
@@ -60,29 +63,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillResignActive(application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
+        DDLogDebug("Entry")
     }
 
     func applicationDidEnterBackground(application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
+        DDLogDebug("Entry")
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
         // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
-        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
+        DDLogDebug("Entry")
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
+        DDLogDebug("Entry")
     }
 
     func applicationWillTerminate(application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
-        DDLogDebug("\(self.dynamicType).\(__FUNCTION__)(\(__LINE__))")
+        DDLogDebug("Entry")
         self.saveContext()
     }
 
@@ -149,5 +152,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
+    // Private Log formatter
+    dynamic func formatLogMessage(l: DDLogMessage!) -> String! {
+        return "\(logDateFormat.stringFromDate(l.timestamp)) \(l.fileName)(\(l.line)):\(l.function) -\(l.flag.rawValue)- \(l.message)"
+    }
 }
 

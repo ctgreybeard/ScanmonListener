@@ -27,7 +27,7 @@ class SMLViewController: UIViewController {
     dynamic var buttonTitle = "Ready" {
         didSet {
             playButton.setTitle(buttonTitle, forState: [.Normal])
-            DDLogDebug("View(\(__LINE__)): button set: '\(buttonTitle)'")
+            DDLogDebug("button set: '\(buttonTitle)'")
         }
     }
 
@@ -44,7 +44,7 @@ class SMLViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
 
         self.currentTitle.text = "Fire/EMS"
         self.statusLog.text = "Application started\n"
@@ -64,31 +64,35 @@ class SMLViewController: UIViewController {
         timeFormatter.zeroFormattingBehavior = .DropLeading
 
         avSession = app.avSession
+
+        // Register for application notifications
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidEnterBackgroundNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationWillEnterForegroundNotification, object: nil)
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        DDLogWarn("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogWarn("Entry")
     }
 
     override func viewDidAppear(animated: Bool) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
     }
 
     override func viewDidDisappear(animated: Bool) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
     }
 
     override func viewWillAppear(animated: Bool) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
     }
 
     override func viewWillDisappear(animated: Bool) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
     }
 
     func doPlay() -> Bool {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
 
         var willStart = false
 
@@ -106,12 +110,12 @@ class SMLViewController: UIViewController {
                 willStart = true
             } catch {
                 let emsg = "Can't start audio session: \(error)"
-                DDLogError("View(\(__LINE__)): \(emsg)")
+                DDLogError("\(emsg)")
                 statusLog.appendLine(emsg)
             }
         } else {
             let emsg = "Play requested but already playing!"
-            DDLogError("View(\(__LINE__)): \(emsg)")
+            DDLogError("\(emsg)")
             statusLog.appendLine(emsg)
             buttonTitle = stopTitle
         }
@@ -120,27 +124,27 @@ class SMLViewController: UIViewController {
     }
 
     func didPlay() {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
 
         buttonTitle = stopTitle
 
         // Begin our activity
         UIApplication.sharedApplication().idleTimerDisabled = true
-        DDLogInfo("View(\(__LINE__)): Activity started")
+        DDLogInfo("Activity started")
     }
 
     func didFail() {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
         didStop()
     }
 
     func doStop() {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
         playStream?.stop("Stop requested")
     }
 
     func didStop() {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
         buttonTitle = playTitle
 
         if let ps = playStream {
@@ -156,18 +160,18 @@ class SMLViewController: UIViewController {
     }
 
     @IBAction func buttonTouch(sender: UIButton) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
         if let thisTitle = sender.currentTitle {
             if thisTitle == "Play" {
                 if doPlay() {
-                    DDLogDebug("View(\(__LINE__)): Play requested")
+                    DDLogDebug("Play requested")
                     self.statusLog.appendLine("Playing \(currentURL)")
                 } else {
                     self.statusLog.appendLine("Play failed")
-                    DDLogError("View(\(__LINE__)): Play request failed")
+                    DDLogError("Play request failed")
                 }
             } else {
-                DDLogDebug("View(\(__LINE__)): Stop requested")
+                DDLogDebug("Stop requested")
                 doStop()
             }
         } else {
@@ -176,7 +180,7 @@ class SMLViewController: UIViewController {
         }
     }
     @IBAction func urlUpdated(sender: UITextField) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
         if let newURL = sender.text {
             self.currentURL = sender.text!
             DDLogDebug("New URL: \(newURL)")
@@ -187,16 +191,16 @@ class SMLViewController: UIViewController {
     }
 
     @IBAction func urlChanged(sender: UITextField) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
     }
 
     @IBAction func urlAction(sender: UITextField) {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
         sender.endEditing(false)
     }
 
     func statusChange(changeObject: AnyObject?) -> String? {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
 
         guard let newStatus = changeObject as? String else {
             return "Status change invalid type: '\(changeObject!)'"
@@ -206,7 +210,7 @@ class SMLViewController: UIViewController {
             return "Status change invalid value '\(newStatus)'"
         }
 
-        DDLogInfo("View(\(__LINE__)): Status set: \(changeTo)")
+        DDLogInfo("Status set: \(changeTo)")
 
         let msg: String
 
@@ -236,13 +240,13 @@ class SMLViewController: UIViewController {
     }
 
     func logEntry(changeObject: AnyObject?) -> String? {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
 
         guard let newLog = changeObject as? String else {
             return "Log entry invalid type: '\(changeObject!)'"
         }
 
-        DDLogInfo("View(\(__LINE__)): log entry: \(newLog)")
+        DDLogInfo("log entry: \(newLog)")
 
         statusLog.appendLine(newLog)
 
@@ -250,13 +254,13 @@ class SMLViewController: UIViewController {
     }
     
     func titleChange(changeObject: AnyObject?) -> String? {
-        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")
+        DDLogDebug("Entry")
 
         guard let newTitle = changeObject as? String else {
             return "Title change invalid type: '\(changeObject!)'"
         }
 
-        DDLogInfo("View(\(__LINE__)): title set: \(newTitle)")
+        DDLogInfo("title set: \(newTitle)")
 
         currentTitle.text = newTitle
 
@@ -264,7 +268,7 @@ class SMLViewController: UIViewController {
     }
 
     func timeChange(changeObject: AnyObject?) -> String? {
-//        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")  // Too chatty!
+//        DDLogDebug("Entry")  // Too chatty!
 
         guard let newTime = changeObject as? NSNumber else {
             return "Time change invalid type: '\(changeObject!)'"
@@ -280,7 +284,7 @@ class SMLViewController: UIViewController {
     }
 
     func observeChange(change: [String : AnyObject]?, handler: (AnyObject?) -> String?) -> String? {
-        //        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")  // Too chatty!
+        //        DDLogDebug("Entry")  // Too chatty!
 
         guard let changeDict = change else {
             return "KeyValueChange change invalid '\(change!)'"
@@ -303,19 +307,19 @@ class SMLViewController: UIViewController {
     }
 
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        //        DDLogDebug("View(\(__LINE__)): \(__FUNCTION__)")  // Too chatty!
+        //        DDLogDebug("Entry")  // Too chatty!
 
         guard let thisPath = keyPath else {
-            DDLogError("View(\(__LINE__)): Got nil keyPath for value change")
+            DDLogError("Got nil keyPath for value change")
             return
         }
 
         guard object === playStream else {
-            DDLogError("View(\(__LINE__)): Unknown observed object '\(object!)'")
+            DDLogError("Unknown observed object '\(object!)'")
             return
         }
 
-        // DDLogDebug("View(\(__LINE__)): keyPath changed: \(thisPath)")
+        // DDLogDebug("keyPath changed: \(thisPath)")
 
         let result: String?
 
@@ -337,7 +341,34 @@ class SMLViewController: UIViewController {
         }
 
         if result != nil {
-            DDLogError("View(\(__LINE__)): \(result!) for key change: \(thisPath)")
+            DDLogError("\(result!) for key change: \(thisPath)")
+        }
+    }
+
+    func appDidBackground(notice: NSNotification) {
+        DDLogDebug("Entry")
+
+    }
+
+    func appWillForeground(notice: NSNotification) {
+        DDLogDebug("Entry")
+
+    }
+
+    dynamic func applicationNotification(notice: NSNotification) {
+        DDLogDebug("Entry")
+
+        switch notice.name {
+
+        case UIApplicationWillEnterForegroundNotification:
+            appWillForeground(notice)
+
+        case UIApplicationDidEnterBackgroundNotification:
+            appDidBackground(notice)
+
+        default:
+            DDLogDebug("Unhandled Notification: '\(notice.name)'")
+
         }
     }
 }
