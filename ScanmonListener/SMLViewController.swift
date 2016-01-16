@@ -188,6 +188,13 @@ class SMLViewController: UIViewController {
         } else {
             DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
         }
+        } else if sender === settingsButton {
+
+        } else if sender === helpButton {
+
+        } else {
+            DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
+        }
     }
 
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
