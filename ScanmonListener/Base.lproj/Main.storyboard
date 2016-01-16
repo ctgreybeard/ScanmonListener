@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9531" systemVersion="15D9c" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10089" systemVersion="15D13b" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10072.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
@@ -83,6 +83,7 @@
                                         <connections>
                                             <action selector="urlAction:" destination="BYZ-38-t0r" eventType="primaryActionTriggered" id="No0-FP-sdb"/>
                                             <action selector="urlChanged:" destination="BYZ-38-t0r" eventType="valueChanged" id="3Ra-0L-dtf"/>
+                                            <action selector="urlEditEnd:" destination="BYZ-38-t0r" eventType="editingDidEndOnExit" id="gua-Vz-al6"/>
                                             <action selector="urlUpdated:" destination="BYZ-38-t0r" eventType="editingDidEnd" id="t3y-nh-3Ui"/>
                                         </connections>
                                     </textField>
@@ -122,12 +123,38 @@
                                                     <constraint firstAttribute="height" constant="40" id="dCh-3k-aFL"/>
                                                 </constraints>
                                             </view>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RuZ-ht-YeB" userLabel="Settings Button">
+                                                <rect key="frame" x="16" y="6" width="28" height="28"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="28" id="hBB-fd-Psr"/>
+                                                    <constraint firstAttribute="height" constant="28" id="n9f-JT-B1t"/>
+                                                </constraints>
+                                                <state key="normal" image="Settings"/>
+                                                <connections>
+                                                    <action selector="buttonTouch:" destination="BYZ-38-t0r" eventType="touchUpInside" id="PGU-Li-LU1"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mIJ-X8-AlQ" userLabel="Help Button">
+                                                <rect key="frame" x="516" y="6" width="28" height="28"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="28" id="5qm-nk-F38"/>
+                                                    <constraint firstAttribute="width" constant="28" id="Fbc-bp-9JH"/>
+                                                </constraints>
+                                                <state key="normal" image="Info"/>
+                                                <connections>
+                                                    <action selector="buttonTouch:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Mum-6g-htr"/>
+                                                </connections>
+                                            </button>
                                         </subviews>
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         <constraints>
                                             <constraint firstItem="Aro-cX-TRn" firstAttribute="centerX" secondItem="JmI-em-yTk" secondAttribute="centerX" id="2Tr-dl-w2L"/>
+                                            <constraint firstAttribute="trailing" secondItem="mIJ-X8-AlQ" secondAttribute="trailing" constant="16" id="8PD-DS-xol"/>
                                             <constraint firstItem="Aro-cX-TRn" firstAttribute="centerY" secondItem="JmI-em-yTk" secondAttribute="centerY" id="Haj-c3-QOE"/>
+                                            <constraint firstItem="RuZ-ht-YeB" firstAttribute="leading" secondItem="JmI-em-yTk" secondAttribute="leading" constant="16" id="Ujr-mU-Exo"/>
+                                            <constraint firstItem="RuZ-ht-YeB" firstAttribute="centerY" secondItem="JmI-em-yTk" secondAttribute="centerY" id="VPY-Y3-DR5"/>
                                             <constraint firstAttribute="height" constant="40" id="vPp-ld-on5"/>
+                                            <constraint firstItem="mIJ-X8-AlQ" firstAttribute="centerY" secondItem="JmI-em-yTk" secondAttribute="centerY" id="ycF-yR-PJt"/>
                                         </constraints>
                                     </view>
                                 </subviews>
@@ -148,8 +175,10 @@
                     </view>
                     <connections>
                         <outlet property="currentTitle" destination="zqw-UX-mEZ" id="zJU-jc-pF1"/>
+                        <outlet property="helpButton" destination="mIJ-X8-AlQ" id="sRc-1q-cxf"/>
                         <outlet property="mpVolumeParent" destination="Aro-cX-TRn" id="ZW2-Y6-sN8"/>
                         <outlet property="playButton" destination="rac-Nf-9Xy" id="CUP-np-h0K"/>
+                        <outlet property="settingsButton" destination="RuZ-ht-YeB" id="20b-sB-L9p"/>
                         <outlet property="statusLog" destination="Phq-RV-u4z" id="e3D-e4-Co2"/>
                         <outlet property="statusMessage" destination="9U6-Kk-ZKo" id="RR0-OQ-Pdd"/>
                         <outlet property="streamURL" destination="IPA-ek-2Fn" id="xFC-dI-S9P"/>
@@ -160,4 +189,8 @@
             <point key="canvasLocation" x="480" y="220"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="Info" width="28" height="28"/>
+        <image name="Settings" width="28" height="28"/>
+    </resources>
 </document>

@@ -22,7 +22,7 @@ enum PlayStatus: String {
     case Failed = "failed"
 }
 
-class SMLPlayStream: NSObject {
+class SMLPlayStream: NSObject, AVAudioPlayerDelegate {
 
     var _player: AVPlayer?
     var _url: NSURL?
@@ -218,6 +218,14 @@ class SMLPlayStream: NSObject {
         catch {
             DDLogError("Audio session set Inactive failed: \(error)")
         }
+    }
+
+    func audioPlayerDidFinishPlaying(player: AVAudioPlayer, successfully flag: Bool) {
+        DDLogInfo("Entry: success: \(flag)")
+    }
+
+    func audioPlayerDecodeErrorDidOccur(player: AVAudioPlayer, error: NSError?) {
+        DDLogInfo("Entry")
     }
 
     dynamic var playing: Bool {

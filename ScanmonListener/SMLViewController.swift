@@ -21,6 +21,8 @@ class SMLViewController: UIViewController {
     @IBOutlet weak var streamURL: UITextField!
     @IBOutlet weak var currentTitle: UILabel!
     @IBOutlet weak var playButton: UIButton!
+    @IBOutlet weak var settingsButton: UIButton!
+    @IBOutlet weak var helpButton: UIButton!
 
     var currentURL = "http://www.greybeard.org/scanner"
     var playStream: SMLPlayStream!
@@ -161,24 +163,44 @@ class SMLViewController: UIViewController {
 
     @IBAction func buttonTouch(sender: UIButton) {
         DDLogDebug("Entry")
-        if let thisTitle = sender.currentTitle {
-            if thisTitle == "Play" {
-                if doPlay() {
-                    DDLogDebug("Play requested")
-                    self.statusLog.appendLine("Playing \(currentURL)")
+        if sender === playButton {
+            if let thisTitle = sender.currentTitle {
+                if thisTitle == "Play" {
+                    if doPlay() {
+                        DDLogDebug("Play requested")
+                        self.statusLog.appendLine("Playing \(currentURL)")
+                    } else {
+                        self.statusLog.appendLine("Play failed")
+                        DDLogError("Play request failed")
+                    }
                 } else {
-                    self.statusLog.appendLine("Play failed")
-                    DDLogError("Play request failed")
+                    DDLogDebug("Stop requested")
+                    doStop()
                 }
             } else {
-                DDLogDebug("Stop requested")
-                doStop()
+                DDLogError("No button tile!")
+                sender.setTitle("HUH!?", forState: UIControlState.Normal)
             }
+        } else if sender === settingsButton {
+
+        } else if sender === helpButton {
+
         } else {
-            DDLogError("No button tile!")
-            sender.setTitle("HUH!?", forState: UIControlState.Normal)
+            DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
         }
     }
+
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        DDLogDebug("Entry")
+        streamURL.endEditing(true)
+        super.touchesBegan(touches, withEvent: event)
+    }
+
+    @IBAction func urlEditEnd(sender: AnyObject) {
+        DDLogDebug("Entry")
+        sender.resignFirstResponder()
+    }
+
     @IBAction func urlUpdated(sender: UITextField) {
         DDLogDebug("Entry")
         if let newURL = sender.text {
