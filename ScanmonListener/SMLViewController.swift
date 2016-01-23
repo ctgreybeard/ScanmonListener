@@ -42,7 +42,7 @@ class SMLViewController: UIViewController {
     var avSession: AVAudioSession!
     let app = UIApplication.sharedApplication().delegate as! AppDelegate
     var mpVV: MPVolumeView!
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -188,13 +188,6 @@ class SMLViewController: UIViewController {
         } else {
             DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
         }
-        } else if sender === settingsButton {
-
-        } else if sender === helpButton {
-
-        } else {
-            DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
-        }
     }
 
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -281,7 +274,7 @@ class SMLViewController: UIViewController {
 
         return nil
     }
-    
+
     func titleChange(changeObject: AnyObject?) -> String? {
         DDLogDebug("Entry")
 
@@ -297,7 +290,7 @@ class SMLViewController: UIViewController {
     }
 
     func timeChange(changeObject: AnyObject?) -> String? {
-//        DDLogDebug("Entry")  // Too chatty!
+        //        DDLogDebug("Entry")  // Too chatty!
 
         guard let newTime = changeObject as? NSNumber else {
             return "Time change invalid type: '\(changeObject!)'"
@@ -376,28 +369,28 @@ class SMLViewController: UIViewController {
 
     func appDidBackground(notice: NSNotification) {
         DDLogDebug("Entry")
-
+        
     }
-
+    
     func appWillForeground(notice: NSNotification) {
         DDLogDebug("Entry")
-
+        
     }
-
+    
     dynamic func applicationNotification(notice: NSNotification) {
         DDLogDebug("Entry")
-
+        
         switch notice.name {
-
+            
         case UIApplicationWillEnterForegroundNotification:
             appWillForeground(notice)
-
+            
         case UIApplicationDidEnterBackgroundNotification:
             appDidBackground(notice)
-
+            
         default:
             DDLogDebug("Unhandled Notification: '\(notice.name)'")
-
+            
         }
     }
 }
