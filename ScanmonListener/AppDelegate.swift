@@ -99,8 +99,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
         preferences = NSUserDefaults.standardUserDefaults()
 
         // Load defaults
-        let mainBundle = NSBundle.mainBundle()
-        if let defsPath = mainBundle.pathForResource("Defaults", ofType: "plist") {
+        if let defsPath = NSBundle.mainBundle().pathForResource("Defaults", ofType: "plist") {
             if let defStream = NSInputStream(fileAtPath: defsPath) {
                 defStream.open()
                 do {

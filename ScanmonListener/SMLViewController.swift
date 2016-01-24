@@ -221,6 +221,40 @@ class SMLViewController: UIViewController {
         sender.endEditing(false)
     }
 
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        DDLogDebug("Entry")
+        if sender === settingsButton {
+            let dest = segue.destinationViewController as! SettingsViewController
+
+            let defaults = NSUserDefaults.standardUserDefaults()
+            dest.autoRetry = defaults.boolForKey("autoRetry")
+
+            dest.backgroundAudio = defaults.boolForKey("backgroundAudio")
+
+            dest.disableLock = defaults.boolForKey("disableLock")
+
+        }
+    }
+
+    @IBAction func aboutReturned(segue: UIStoryboardSegue) {
+        // Do nothing
+        DDLogInfo("About returned")
+    }
+
+    @IBAction func settingsReturnedOK(segue: UIStoryboardSegue) {
+        DDLogInfo("Settings OK")
+        let dest = segue.sourceViewController as! SettingsViewController
+        let defaults = NSUserDefaults.standardUserDefaults()
+        defaults.setBool(dest.autoRetry, forKey: "autoRetry")
+        defaults.setBool(dest.backgroundAudio, forKey: "backgroundAudio")
+        defaults.setBool(dest.disableLock, forKey: "disableLock")
+        DDLogInfo("New settings: autoRetry: \(dest.autoRetry), backgroundAudio: \(dest.backgroundAudio), disableLock: \(dest.disableLock)")
+    }
+
+    @IBAction func settingsReturnedCancel(segue: UIStoryboardSegue) {
+        DDLogInfo("Settings cancelled")
+    }
+    
     func statusChange(changeObject: AnyObject?) -> String? {
         DDLogDebug("Entry")
 
