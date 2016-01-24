@@ -108,7 +108,9 @@ class SMLPlayStream: NSObject {
 
         } else if name == AVFoundation.AVAudioSessionInterruptionNotification {
 
-            guard let type = userInfo[AVAudioSessionInterruptionTypeKey] as? AVAudioSessionInterruptionType else {
+            let tvalue = userInfo[AVAudioSessionInterruptionTypeKey] as! NSNumber
+            
+            guard let type =  AVAudioSessionInterruptionType(rawValue: UInt(tvalue)) else {
                 DDLogError("Interruption type not valid: \(userInfo[AVAudioSessionInterruptionTypeKey])")
                 return
             }
