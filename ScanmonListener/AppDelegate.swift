@@ -27,7 +27,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
 
         // Initialize the logger
         let testLogLevel = DDLogLevel.Verbose
-        let fileLogLevel = DDLogLevel.Info
 
         DDTTYLogger.sharedInstance().logFormatter = self
         DDLog.addLogger(DDTTYLogger.sharedInstance(), withLevel: testLogLevel)
@@ -38,21 +37,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
         fileLogger.maximumFileSize = 10000000
         fileLogger.rollingFrequency = NSTimeInterval(24 * 60 * 60)
         fileLogger.logFormatter = self
-        DDLog.addLogger(fileLogger, withLevel: fileLogLevel)
 
         DDTTYLogger.sharedInstance().colorsEnabled = true
         let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
-
-        DDLogInfo("launchOptions:\(launchOptions)")
-
-        DDLogInfo("Documents directory: \(NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true))")
 
         loadPrefs()
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "defaultsChanged:", name: nil, object: preferences)
 
         DDLogDebug("default for backgroundAudio: \(preferences.boolForKey("backgroundAudio"))")
 
+        let fileLogLevel = DDLogLevel(rawValue: UInt(preferences.integerForKey("file_debug"))) ?? DDLogLevel.Info
+        DDLogDebug("file_debug: \(fileLogLevel.rawValue)")
+        DDLog.addLogger(fileLogger, withLevel: fileLogLevel)
+
+        DDLogInfo("launchOptions:\(launchOptions)")
+
+        DDLogInfo("Documents directory: \(NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true))")
+        
         // Establish the Audio Session
         do {
             try avSession.setCategory(AVAudioSessionCategoryPlayback)
@@ -180,7 +182,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
 
     // Private Log formatter
     dynamic func formatLogMessage(l: DDLogMessage!) -> String! {
-        return "\(logDateFormat.stringFromDate(l.timestamp)) \(l.fileName)(\(l.line)):\(l.function) -\(l.flag.rawValue)- \(l.message)"
+        var level = ""
+        if DDLogFlag.Error.isSubsetOf(l.flag) {
+            level += "E"
+        }
+        if DDLogFlag.Warning.isSubsetOf(l.flag) {
+            level += "W"
+        }
+        if DDLogFlag.Info.isSubsetOf(l.flag) {
+            level += "I"
+        }
+        if DDLogFlag.Debug.isSubsetOf(l.flag) {
+            level += "D"
+        }
+        if DDLogFlag.Verbose.isSubsetOf(l.flag) {
+            level += "V"
+        }
+
+        return "\(logDateFormat.stringFromDate(l.timestamp)) \(l.fileName)(\(l.line)):\(l.function) -\(level)- \(l.message)"
     }
 
     // User defaults notification
