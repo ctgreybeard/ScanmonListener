@@ -36,6 +36,7 @@ class SMLViewController: UIViewController {
     let playTitle = "Play"
     let stopTitle = "Stop"
     let startTitle = "Starting"
+    let idleTitle = "Fire/EMS"
 
     // Internal variables
     let timeFormatter = NSDateComponentsFormatter()
@@ -48,7 +49,7 @@ class SMLViewController: UIViewController {
 
         DDLogDebug("Entry")
 
-        self.currentTitle.text = "Fire/EMS"
+        self.currentTitle.text = idleTitle
         self.statusLog.text = "Application started\n"
         self.streamURL.text = currentURL
         playButton.titleLabel?.adjustsFontSizeToFitWidth = true
@@ -312,10 +313,16 @@ class SMLViewController: UIViewController {
     func titleChange(changeObject: AnyObject?) -> String? {
         DDLogDebug("Entry")
 
-        guard let newTitle = changeObject as? String else {
-            return "Title change invalid type: '\(changeObject!)'"
-        }
+        var newTitle: String
 
+        if let nt = changeObject as? String  {
+            newTitle = nt
+        } else if changeObject! is NSNull {
+            newTitle = idleTitle
+        } else {
+            return("Title change invalid type: '\(changeObject)'")
+        }
+        
         DDLogInfo("title set: \(newTitle)")
 
         currentTitle.text = newTitle

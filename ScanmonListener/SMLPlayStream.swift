@@ -102,9 +102,9 @@ class SMLPlayStream: NSObject {
             name == AVFoundation.AVPlayerItemPlaybackStalledNotification {          // Network error?
 
                 // Lost the stream somehow
-                dispatch_async(dispatch_get_main_queue(), {
+                dispatch_async(dispatch_get_main_queue()) {
                     self.stop(note.name)
-                })
+                }
 
         } else if name == AVFoundation.AVAudioSessionInterruptionNotification {
 
@@ -203,6 +203,7 @@ class SMLPlayStream: NSObject {
         DDLogInfo("Stopping")
         logentry = "Stopped: \(reason)"
 
+        title = nil
         _player?.pause()
         _player?.removeObserver(self, forKeyPath: "status")
         _player?.removeObserver(self, forKeyPath: "currentItem.timedMetadata")
