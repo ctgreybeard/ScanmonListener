@@ -224,6 +224,20 @@ class SMLPlayStream: NSObject {
         }
     }
 
+    dynamic func pause() {
+        if let player = _player {
+            player.rate = 0.0
+            status = .Paused
+        }
+    }
+
+    dynamic func resume() {
+        if let player = _player {
+            player.rate = 1.0
+            status = .Playing
+        }
+    }
+
     dynamic var playing: Bool {
         get {
             return status == .Playing

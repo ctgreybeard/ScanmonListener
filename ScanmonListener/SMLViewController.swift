@@ -69,8 +69,8 @@ class SMLViewController: UIViewController {
         avSession = app.avSession
 
         // Register for application notifications
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidEnterBackgroundNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationWillEnterForegroundNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidEnterBackgroundNotification, object: UIApplication.sharedApplication())
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidBecomeActiveNotification, object: UIApplication.sharedApplication())
     }
 
     override func didReceiveMemoryWarning() {
@@ -132,8 +132,11 @@ class SMLViewController: UIViewController {
         buttonTitle = stopTitle
 
         // Begin our activity
-        UIApplication.sharedApplication().idleTimerDisabled = true
-        DDLogInfo("Activity started")
+        if NSUserDefaults.standardUserDefaults().boolForKey("disableLock") {
+            UIApplication.sharedApplication().idleTimerDisabled = true
+        }
+        
+        DDLogInfo("Playback started")
     }
 
     func didFail() {
@@ -146,6 +149,24 @@ class SMLViewController: UIViewController {
         playStream?.stop("Stop requested")
     }
 
+    func doPause() {
+        DDLogDebug("Entry")
+
+        if let ps = playStream {
+            buttonTitle = playTitle
+            ps.pause()
+        }
+    }
+
+    func doResume() {
+        DDLogDebug("Entry")
+
+        if let ps = playStream {
+            buttonTitle = stopTitle
+            ps.resume()
+        }
+    }
+    
     func didStop() {
         DDLogDebug("Entry")
         buttonTitle = playTitle
@@ -410,12 +431,19 @@ class SMLViewController: UIViewController {
 
     func appDidBackground(notice: NSNotification) {
         DDLogDebug("Entry")
-        
+
+        if !NSUserDefaults.standardUserDefaults().boolForKey("backgroundAudio") {
+            doPause()
+        }
     }
     
-    func appWillForeground(notice: NSNotification) {
+    func appIsActive(notice: NSNotification) {
         DDLogDebug("Entry")
-        
+
+        if !NSUserDefaults.standardUserDefaults().boolForKey("backgroundAudio") {
+            doResume()
+        }
+
     }
     
     dynamic func applicationNotification(notice: NSNotification) {
@@ -423,8 +451,8 @@ class SMLViewController: UIViewController {
         
         switch notice.name {
             
-        case UIApplicationWillEnterForegroundNotification:
-            appWillForeground(notice)
+        case UIApplicationDidBecomeActiveNotification:
+            appIsActive(notice)
             
         case UIApplicationDidEnterBackgroundNotification:
             appDidBackground(notice)
