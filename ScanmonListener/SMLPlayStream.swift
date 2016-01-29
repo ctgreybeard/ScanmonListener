@@ -16,6 +16,7 @@ enum PlayStatus: String {
     case Ready = "ready"
     case Starting = "starting"
     case Playing = "playing"
+    case Retrying = "retrying"
     case Paused = "paused"
     case Stopping = "stopping"
     case Stopped = "stopped"
@@ -43,6 +44,8 @@ class SMLPlayStream: NSObject {
     // Private instance variables
     private var timeObserver: AnyObject?
     let aSess = AVAudioSession.sharedInstance()
+    var retryCount = 0
+    let retryMax = 10
 
     dynamic func audioNotification(note: NSNotification) {
 
@@ -93,18 +96,15 @@ class SMLPlayStream: NSObject {
 
             if _player!.rate == 0.0 {
                 dispatch_async(dispatch_get_main_queue(), {
-                    self.stop("Output changed")
+                    self.pause()
                 })
             }
 
-        } else if name == AVFoundation.AVPlayerItemDidPlayToEndTimeNotification ||        // Source was killed or client kicked
+        } else if name == AVFoundation.AVPlayerItemDidPlayToEndTimeNotification ||  // Source was killed or client kicked
             name == AVFoundation.AVPlayerItemFailedToPlayToEndTimeNotification ||   // Lost the connection?
             name == AVFoundation.AVPlayerItemPlaybackStalledNotification {          // Network error?
 
-                // Lost the stream somehow
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.stop(note.name)
-                }
+            // Lost the stream somehow
 
         } else if name == AVFoundation.AVAudioSessionInterruptionNotification {
 
@@ -133,12 +133,15 @@ class SMLPlayStream: NSObject {
             case .Ended:
                 if let option = userInfo[AVAudioSessionInterruptionOptionKey] as? AVAudioSessionInterruptionOptions {
                     switch option {
+
                     case AVAudioSessionInterruptionOptions.ShouldResume:
                         status = .Playing
                         _player?.play()
+
                     default:
                         DDLogError("Unknown interruption option: \(option.rawValue)")
                     }
+
                 } else {
                     DDLogError("No options found in interruption")
                 }
@@ -147,6 +150,11 @@ class SMLPlayStream: NSObject {
         } else {
             DDLogWarn("Unhandled Notification: \(name)")
         }
+    }
+
+    func play() {
+        _player?.play()
+        status = .Starting
     }
 
     dynamic func play(url: String) -> Bool {
@@ -238,6 +246,16 @@ class SMLPlayStream: NSObject {
         }
     }
 
+    dynamic func retry() {
+        retryCount += 1
+        if retryCount > retryMax {
+            status = .Failed
+            self.stop("Retries exceeded")
+        } else {
+
+        }
+    }
+
     dynamic var playing: Bool {
         get {
             return status == .Playing
@@ -275,6 +293,7 @@ class SMLPlayStream: NSObject {
             _player?.play()
             self.status = .Playing
             error = nil
+            retryCount = 0
 
         case .Failed:
             DDLogInfo("status change to Failed: \(_player?.error!)")

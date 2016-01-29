@@ -26,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
         logDateFormat.dateFormat = "ddMMMyyyy hh:mm:ss.SSS"
 
         // Initialize the logger
-        let testLogLevel = DDLogLevel.Verbose
+        let testLogLevel = DDLogLevel.Debug
 
         DDTTYLogger.sharedInstance().logFormatter = self
         DDLog.addLogger(DDTTYLogger.sharedInstance(), withLevel: testLogLevel)
@@ -43,7 +43,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
 
         loadPrefs()
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "defaultsChanged:", name: nil, object: preferences)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "defaultsChanged:", name: NSUserDefaultsDidChangeNotification, object: preferences)
 
         DDLogDebug("default for backgroundAudio: \(preferences.boolForKey("backgroundAudio"))")
 
@@ -182,21 +182,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
 
     // Private Log formatter
     dynamic func formatLogMessage(l: DDLogMessage!) -> String! {
-        var level = ""
-        if DDLogFlag.Error.isSubsetOf(l.flag) {
-            level += "E"
-        }
-        if DDLogFlag.Warning.isSubsetOf(l.flag) {
-            level += "W"
-        }
-        if DDLogFlag.Info.isSubsetOf(l.flag) {
-            level += "I"
-        }
-        if DDLogFlag.Debug.isSubsetOf(l.flag) {
-            level += "D"
-        }
-        if DDLogFlag.Verbose.isSubsetOf(l.flag) {
-            level += "V"
+        let level: String
+
+        switch l.flag {
+        case DDLogFlag.Error:
+            level = "E"
+        case DDLogFlag.Warning:
+            level = "W"
+        case DDLogFlag.Info:
+            level = "I"
+        case DDLogFlag.Debug:
+            level = "D"
+        case DDLogFlag.Verbose:
+            level = "V"
+        default:
+            level = "?"
         }
 
         return "\(logDateFormat.stringFromDate(l.timestamp)) \(l.fileName)(\(l.line)):\(l.function) -\(level)- \(l.message)"

@@ -25,11 +25,11 @@ class SMLViewController: UIViewController {
     @IBOutlet weak var helpButton: UIButton!
 
     var currentURL = "http://www.greybeard.org/scanner"
-    var playStream: SMLPlayStream!
+    var playStream: SMLPlayStream?
     dynamic var buttonTitle = "Ready" {
         didSet {
-            playButton.setTitle(buttonTitle, forState: [.Normal])
-            DDLogDebug("button set: '\(buttonTitle)'")
+        playButton.setTitle(buttonTitle, forState: [.Normal])
+        DDLogDebug("button set: '\(buttonTitle)'")
         }
     }
 
@@ -69,8 +69,10 @@ class SMLViewController: UIViewController {
         avSession = app.avSession
 
         // Register for application notifications
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidEnterBackgroundNotification, object: UIApplication.sharedApplication())
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidBecomeActiveNotification, object: UIApplication.sharedApplication())
+        let defs = NSNotificationCenter.defaultCenter()
+        defs.addObserver(self, selector: "applicationNotification:", name: UIApplicationDidEnterBackgroundNotification, object: UIApplication.sharedApplication())
+        defs.addObserver(self, selector: "applicationNotification:", name: UIApplicationDidBecomeActiveNotification, object: UIApplication.sharedApplication())
+        defs.addObserver(self, selector: "defaultsChanged:", name: NSUserDefaultsDidChangeNotification, object: app.preferences)
     }
 
     override func didReceiveMemoryWarning() {
@@ -97,33 +99,44 @@ class SMLViewController: UIViewController {
     func doPlay() -> Bool {
         DDLogDebug("Entry")
 
-        var willStart = false
+        let willStart: Bool
 
-        if playStream == nil {
+        if let ps = playStream  {
+            if ps.status == .Paused {
+                willStart = true
+
+            } else {
+                let emsg = "Play requested but already playing!"
+                DDLogError(emsg)
+                statusLog.appendLine(emsg)
+                buttonTitle = stopTitle
+                willStart = false
+            }
+            ps.play()
+
+        } else {
+
             playStream = SMLPlayStream()
-            playStream.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
-            playStream.addObserver(self, forKeyPath: "title", options: .New, context: nil)
-            playStream.addObserver(self, forKeyPath: "time", options: .New, context: nil)
-            playStream.addObserver(self, forKeyPath: "logentry", options: .New, context: nil)
+            playStream!.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
+            playStream!.addObserver(self, forKeyPath: "title", options: .New, context: nil)
+            playStream!.addObserver(self, forKeyPath: "time", options: .New, context: nil)
+            playStream!.addObserver(self, forKeyPath: "logentry", options: .New, context: nil)
 
             do {
                 try avSession.setActive(true)
 
-                playStream.play(currentURL)
+                playStream!.play(currentURL)
                 willStart = true
             } catch {
+                willStart = false
                 let emsg = "Can't start audio session: \(error)"
                 DDLogError("\(emsg)")
                 statusLog.appendLine(emsg)
             }
-        } else {
-            let emsg = "Play requested but already playing!"
-            DDLogError("\(emsg)")
-            statusLog.appendLine(emsg)
-            buttonTitle = stopTitle
         }
-
+        
         return willStart
+        
     }
 
     func didPlay() {
@@ -135,7 +148,7 @@ class SMLViewController: UIViewController {
         if NSUserDefaults.standardUserDefaults().boolForKey("disableLock") {
             UIApplication.sharedApplication().idleTimerDisabled = true
         }
-        
+
         DDLogInfo("Playback started")
     }
 
@@ -153,9 +166,12 @@ class SMLViewController: UIViewController {
         DDLogDebug("Entry")
 
         if let ps = playStream {
-            buttonTitle = playTitle
             ps.pause()
         }
+    }
+
+    func didPause() {
+        buttonTitle = playTitle
     }
 
     func doResume() {
@@ -166,7 +182,7 @@ class SMLViewController: UIViewController {
             ps.resume()
         }
     }
-    
+
     func didStop() {
         DDLogDebug("Entry")
         buttonTitle = playTitle
@@ -276,96 +292,6 @@ class SMLViewController: UIViewController {
     @IBAction func settingsReturnedCancel(segue: UIStoryboardSegue) {
         DDLogInfo("Settings cancelled")
     }
-    
-    func statusChange(changeObject: AnyObject?) -> String? {
-        DDLogDebug("Entry")
-
-        guard let newStatus = changeObject as? String else {
-            return "Status change invalid type: '\(changeObject!)'"
-        }
-
-        guard let changeTo = PlayStatus(rawValue: newStatus) else {
-            return "Status change invalid value '\(newStatus)'"
-        }
-
-        DDLogInfo("Status set: \(changeTo)")
-
-        let msg: String
-
-        switch changeTo {
-        case .Playing:
-            msg = "Playing"
-            didPlay()
-        case .Ready:
-            msg = "Ready"
-        case .Starting:
-            msg = "Starting"
-        case .Stopped:
-            msg = "Stopped"
-            didStop()
-        case .Stopping:
-            msg = "Stopping"
-        case .Failed:
-            msg = "Failed"
-            didFail()
-        case .Paused:
-            msg = "Paused"
-        }
-
-        statusMessage.text = msg
-
-        return nil
-    }
-
-    func logEntry(changeObject: AnyObject?) -> String? {
-        DDLogDebug("Entry")
-
-        guard let newLog = changeObject as? String else {
-            return "Log entry invalid type: '\(changeObject!)'"
-        }
-
-        DDLogInfo("log entry: \(newLog)")
-
-        statusLog.appendLine(newLog)
-
-        return nil
-    }
-
-    func titleChange(changeObject: AnyObject?) -> String? {
-        DDLogDebug("Entry")
-
-        var newTitle: String
-
-        if let nt = changeObject as? String  {
-            newTitle = nt
-        } else if changeObject! is NSNull {
-            newTitle = idleTitle
-        } else {
-            return("Title change invalid type: '\(changeObject)'")
-        }
-        
-        DDLogInfo("title set: \(newTitle)")
-
-        currentTitle.text = newTitle
-
-        return nil
-    }
-
-    func timeChange(changeObject: AnyObject?) -> String? {
-        //        DDLogDebug("Entry")  // Too chatty!
-
-        guard let newTime = changeObject as? NSNumber else {
-            return "Time change invalid type: '\(changeObject!)'"
-        }
-
-        guard let strTime = timeFormatter.stringFromTimeInterval(newTime.doubleValue) else {
-            return "Time change invalid time value '\(newTime)'"
-        }
-
-        statusMessage.text = "Time: \(strTime)"
-
-        return nil
-    }
 
     func observeChange(change: [String : AnyObject]?, handler: (AnyObject?) -> String?) -> String? {
         //        DDLogDebug("Entry")  // Too chatty!
@@ -403,35 +329,124 @@ class SMLViewController: UIViewController {
             return
         }
 
-        // DDLogDebug("keyPath changed: \(thisPath)")
-
         let result: String?
 
         switch thisPath {
         case "statusRaw":
-            result = observeChange(change, handler: statusChange)
+            result = observeChange(change) {(changeObject: AnyObject?) -> String? in
+                DDLogDebug("statusRaw")
+
+                guard let newStatus = changeObject as? String else {
+                    return "Status change invalid type: '\(changeObject!)'"
+                }
+
+                guard let changeTo = PlayStatus(rawValue: newStatus) else {
+                    return "Status change invalid value '\(newStatus)'"
+                }
+
+                DDLogInfo("Status set: \(changeTo)")
+
+                let msg: String
+
+                switch changeTo {
+                case .Playing:
+                    msg = "Playing"
+                    self.didPlay()
+
+                case .Ready:
+                    msg = "Ready"
+
+                case .Starting:
+                    msg = "Starting"
+
+                case .Stopped:
+                    msg = "Stopped"
+                    self.didStop()
+
+                case .Stopping:
+                    msg = "Stopping"
+
+                case .Failed:
+                    msg = "Failed"
+                    self.didFail()
+
+                case .Paused:
+                    msg = "Paused"
+
+                case .Retrying:
+                    msg = "Retrying"
+                }
+
+                self.statusMessage.text = msg
+
+                return nil
+            }
+
 
         case "title":
-            result = observeChange(change, handler: titleChange)
+            result = observeChange(change) {(changeObject: AnyObject?) -> String? in
+                DDLogDebug("title")
+
+                var newTitle: String
+
+                if let nt = changeObject as? String  {
+                    newTitle = nt
+                } else if changeObject! is NSNull {
+                    newTitle = self.idleTitle
+                } else {
+                    return("Title change invalid type: '\(changeObject)'")
+                }
+
+                DDLogInfo("title set: \(newTitle)")
+
+                self.currentTitle.text = newTitle
+
+                return nil
+            }
 
         case "time":
-            result = observeChange(change, handler: timeChange)
+            result = observeChange(change) {(changeObject: AnyObject?) -> String? in
+                DDLogVerbose("time")
+                guard let newTime = changeObject as? NSNumber else {
+                    return "Time change invalid type: '\(changeObject!)'"
+                }
+
+                guard let strTime = self.timeFormatter.stringFromTimeInterval(newTime.doubleValue) else {
+                    return "Time change invalid time value '\(newTime)'"
+                }
+
+                self.statusMessage.text = "Time: \(strTime)"
+
+                return nil
+            }
 
         case "logentry":
-            result = observeChange(change, handler: logEntry)
+            result = observeChange(change) {(changeObject: AnyObject?) -> String? in
+                DDLogDebug("logentry")
+
+                guard let newLog = changeObject as? String else {
+                    return "Log entry invalid type: '\(changeObject!)'"
+                }
+
+                DDLogInfo("log entry: \(newLog)")
+
+                self.statusLog.appendLine(newLog)
+
+                return nil
+            }
 
         default:
             result = "Got value change for unknown"
         }
-
+        
         if result != nil {
             DDLogError("\(result!) for key change: \(thisPath)")
         }
     }
-
+    
     func appDidBackground(notice: NSNotification) {
         DDLogDebug("Entry")
-
+        
         if !NSUserDefaults.standardUserDefaults().boolForKey("backgroundAudio") {
             doPause()
         }
@@ -439,11 +454,11 @@ class SMLViewController: UIViewController {
     
     func appIsActive(notice: NSNotification) {
         DDLogDebug("Entry")
-
+        
         if !NSUserDefaults.standardUserDefaults().boolForKey("backgroundAudio") {
             doResume()
         }
-
+        
     }
     
     dynamic func applicationNotification(notice: NSNotification) {
@@ -460,6 +475,22 @@ class SMLViewController: UIViewController {
         default:
             DDLogDebug("Unhandled Notification: '\(notice.name)'")
             
+        }
+    }
+
+    // User defaults notification
+    dynamic func defaultsChanged(notice: NSNotification) {
+        DDLogDebug("Entry: \(notice.name)")
+        let defs = NSUserDefaults.standardUserDefaults()
+        let idleT = defs.boolForKey("disableLock")
+        if idleT {
+            // Assume it was turned ON
+            if playStream != nil && playStream!.playing {
+                UIApplication.sharedApplication().idleTimerDisabled = true  // Only turn it on if we are playing
+            }
+        } else {
+            // Assume it was turned OFF
+            UIApplication.sharedApplication().idleTimerDisabled = false // Doesn't matter if we turn it off when it's off
         }
     }
 }
