@@ -44,6 +44,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0F1DEB981C6D75F400146EB4 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0F38B7651C401229001800DE /* Defaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Defaults.plist; sourceTree = "<group>"; };
 		0F38B7671C4039A1001800DE /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SMLLogScrollView.swift; sourceTree = "<group>"; };
@@ -104,9 +105,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0F1DEB971C6D75E500146EB4 /* Docs */ = {
+			isa = PBXGroup;
+			children = (
+				0F1DEB981C6D75F400146EB4 /* README.md */,
+			);
+			name = Docs;
+			sourceTree = "<group>";
+		};
 		0FBEBA721C3194330048343D = {
 			isa = PBXGroup;
 			children = (
+				0F1DEB971C6D75E500146EB4 /* Docs */,
 				0F6CD8631C34D7FF00BC7D00 /* SMLPlayground.playground */,
 				0FBEBA7D1C3194330048343D /* ScanmonListener */,
 				0FBEBA951C3194330048343D /* ScanmonListenerTests */,
