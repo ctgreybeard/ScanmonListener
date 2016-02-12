@@ -8,40 +8,113 @@
 
 import UIKit
 import CoreData
+import AVFoundation
+
+import CocoaLumberjack
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
 
     var window: UIWindow?
-
+    let avSession = AVAudioSession.sharedInstance()
+    let logDateFormat = NSDateFormatter()
+    dynamic var preferences: NSUserDefaults! = nil
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // Override point for customization after application launch.
+
+        // Initialize the date/time formatter
+        logDateFormat.dateFormat = "ddMMMyyyy hh:mm:ss.SSS"
+
+        // Initialize the logger
+        let testLogLevel = DDLogLevel.Verbose
+
+        DDTTYLogger.sharedInstance().logFormatter = self
+        DDLog.addLogger(DDTTYLogger.sharedInstance(), withLevel: testLogLevel)
+
+        let fileLogManager = DDLogFileManagerDefault(logsDirectory: applicationDocumentsDirectory.path)
+        fileLogManager.maximumNumberOfLogFiles = 5
+        let fileLogger = DDFileLogger(logFileManager: fileLogManager)
+        fileLogger.maximumFileSize = 10000000
+        fileLogger.rollingFrequency = NSTimeInterval(24 * 60 * 60)
+        fileLogger.logFormatter = self
+
+        DDTTYLogger.sharedInstance().colorsEnabled = true
+        let infoColor = UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
+        DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
+
+        loadPrefs()
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "defaultsChanged:", name: nil, object: preferences)
+
+        DDLogDebug("default for backgroundAudio: \(preferences.boolForKey("backgroundAudio"))")
+
+        let fileLogLevel = DDLogLevel(rawValue: UInt(preferences.integerForKey("file_debug"))) ?? DDLogLevel.Info
+        DDLogDebug("file_debug: \(fileLogLevel.rawValue)")
+        DDLog.addLogger(fileLogger, withLevel: fileLogLevel)
+
+        DDLogInfo("launchOptions:\(launchOptions)")
+
+        DDLogInfo("Documents directory: \(NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true))")
+        
+        // Establish the Audio Session
+        do {
+            try avSession.setCategory(AVAudioSessionCategoryPlayback)
+            try avSession.setMode(AVAudioSessionModeSpokenAudio)
+            try avSession.setActive(false)
+        }
+        catch {
+            DDLogError("audioSession error: \(error))")
+        }
+
         return true
     }
 
     func applicationWillResignActive(application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
+        DDLogDebug("Entry")
     }
 
     func applicationDidEnterBackground(application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        DDLogDebug("Entry")
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
         // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+        DDLogDebug("Entry")
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        DDLogDebug("Entry")
     }
 
     func applicationWillTerminate(application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
+        DDLogDebug("Entry")
         self.saveContext()
+    }
+
+    func loadPrefs() {
+        preferences = NSUserDefaults.standardUserDefaults()
+
+        // Load defaults
+        if let defsPath = NSBundle.mainBundle().pathForResource("Defaults", ofType: "plist") {
+            if let defStream = NSInputStream(fileAtPath: defsPath) {
+                defStream.open()
+                do {
+                    let defPlist = try NSPropertyListSerialization.propertyListWithStream(defStream, options: .Immutable, format: nil)
+                    preferences.registerDefaults(defPlist as! [String : AnyObject])
+                } catch {
+                    DDLogError("Default properties read error: \(error)")
+                }
+                defStream.close()
+            }
+        } else {
+            DDLogError("Cannot find Defalts.plist")
+        }
     }
 
     // MARK: - Core Data stack
@@ -76,7 +149,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let wrappedError = NSError(domain: "YOUR_ERROR_DOMAIN", code: 9999, userInfo: dict)
             // Replace this with code to handle the error appropriately.
             // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-            NSLog("Unresolved error \(wrappedError), \(wrappedError.userInfo)")
+            DDLogError("Unresolved error \(wrappedError), \(wrappedError.userInfo)")
             abort()
         }
         
@@ -101,11 +174,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 // Replace this implementation with code to handle the error appropriately.
                 // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 let nserror = error as NSError
-                NSLog("Unresolved error \(nserror), \(nserror.userInfo)")
+                DDLogError("Unresolved error \(nserror), \(nserror.userInfo)")
                 abort()
             }
         }
     }
 
+    // Private Log formatter
+    dynamic func formatLogMessage(l: DDLogMessage!) -> String! {
+        var level = ""
+        if DDLogFlag.Error.isSubsetOf(l.flag) {
+            level += "E"
+        }
+        if DDLogFlag.Warning.isSubsetOf(l.flag) {
+            level += "W"
+        }
+        if DDLogFlag.Info.isSubsetOf(l.flag) {
+            level += "I"
+        }
+        if DDLogFlag.Debug.isSubsetOf(l.flag) {
+            level += "D"
+        }
+        if DDLogFlag.Verbose.isSubsetOf(l.flag) {
+            level += "V"
+        }
+
+        return "\(logDateFormat.stringFromDate(l.timestamp)) \(l.fileName)(\(l.line)):\(l.function) -\(level)- \(l.message)"
+    }
+
+    // User defaults notification
+    dynamic func defaultsChanged(notice: NSNotification) {
+        DDLogDebug("Entry: \(notice.name)")
+    }
 }
 

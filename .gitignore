@@ -1,0 +1,3 @@
+# Ignore Pod-installed things ...
+Pods/
+Podfile.lock

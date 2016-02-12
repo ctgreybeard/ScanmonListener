@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>file_debug</key>
+	<integer>7</integer>
+	<key>streamURL</key>
+	<string>http://www.greybeard.org/scanner</string>
+	<key>autoRetry</key>
+	<true/>
+	<key>backgroundAudio</key>
+	<true/>
+	<key>disableLock</key>
+	<true/>
+</dict>
+</plist>

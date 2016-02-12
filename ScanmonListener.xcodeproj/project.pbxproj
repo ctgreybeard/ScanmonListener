@@ -7,14 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0F38B7661C401229001800DE /* Defaults.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0F38B7651C401229001800DE /* Defaults.plist */; };
+		0F38B7681C4039A1001800DE /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 0F38B7671C4039A1001800DE /* Settings.bundle */; };
+		0F3E2DF41C31E2E9002E6AFE /* SMLLogScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */; };
+		0F3E2DF61C31F775002E6AFE /* SMLPlayStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */; };
+		0F95C4071C54413800DA3F83 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F95C4061C54413800DA3F83 /* SettingsViewController.swift */; };
 		0FBEBA7F1C3194330048343D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA7E1C3194330048343D /* AppDelegate.swift */; };
-		0FBEBA811C3194330048343D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA801C3194330048343D /* ViewController.swift */; };
+		0FBEBA811C3194330048343D /* SMLViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA801C3194330048343D /* SMLViewController.swift */; };
 		0FBEBA841C3194330048343D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0FBEBA821C3194330048343D /* Main.storyboard */; };
 		0FBEBA871C3194330048343D /* ScanmonListener.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA851C3194330048343D /* ScanmonListener.xcdatamodeld */; };
 		0FBEBA891C3194330048343D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0FBEBA881C3194330048343D /* Assets.xcassets */; };
 		0FBEBA8C1C3194330048343D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0FBEBA8A1C3194330048343D /* LaunchScreen.storyboard */; };
 		0FBEBA971C3194330048343D /* ScanmonListenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBA961C3194330048343D /* ScanmonListenerTests.swift */; };
 		0FBEBAA21C3194330048343D /* ScanmonListenerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBEBAA11C3194330048343D /* ScanmonListenerUITests.swift */; };
+		0FF56E671C541D2D0058E91B /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF56E661C541D2D0058E91B /* AboutViewController.swift */; };
+		3ED6FD6D7363605F487E655B /* Pods_ScanmonListenerUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 39F8A3B681CCD5B165110F1B /* Pods_ScanmonListenerUITests.framework */; };
+		4D94DB10F6DC25FD83B62ACD /* Pods_ScanmonListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA08CCBD6DE93FF08628CAC /* Pods_ScanmonListener.framework */; };
+		7D391766E20229119C0435D0 /* Pods_ScanmonListenerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E13932DA9CD8BC2011F2AB /* Pods_ScanmonListenerTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,9 +44,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0F1DEB981C6D75F400146EB4 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		0F38B7651C401229001800DE /* Defaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Defaults.plist; sourceTree = "<group>"; };
+		0F38B7671C4039A1001800DE /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
+		0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SMLLogScrollView.swift; sourceTree = "<group>"; };
+		0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SMLPlayStream.swift; sourceTree = "<group>"; };
+		0F6CD8631C34D7FF00BC7D00 /* SMLPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; name = SMLPlayground.playground; path = ../SMLPlayground.playground; sourceTree = "<group>"; };
+		0F95C4061C54413800DA3F83 /* SettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		0FBEBA7B1C3194330048343D /* ScanmonListener.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScanmonListener.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FBEBA7E1C3194330048343D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		0FBEBA801C3194330048343D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		0FBEBA801C3194330048343D /* SMLViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMLViewController.swift; sourceTree = "<group>"; };
 		0FBEBA831C3194330048343D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		0FBEBA861C3194330048343D /* ScanmonListener.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ScanmonListener.xcdatamodel; sourceTree = "<group>"; };
 		0FBEBA881C3194330048343D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -49,6 +65,16 @@
 		0FBEBA9D1C3194330048343D /* ScanmonListenerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScanmonListenerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FBEBAA11C3194330048343D /* ScanmonListenerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanmonListenerUITests.swift; sourceTree = "<group>"; };
 		0FBEBAA31C3194330048343D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0FF56E661C541D2D0058E91B /* AboutViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
+		18D67C9BF0E71CF30AA3A920 /* Pods-ScanmonListenerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScanmonListenerTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ScanmonListenerTests/Pods-ScanmonListenerTests.release.xcconfig"; sourceTree = "<group>"; };
+		1AA08CCBD6DE93FF08628CAC /* Pods_ScanmonListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ScanmonListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		39F8A3B681CCD5B165110F1B /* Pods_ScanmonListenerUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ScanmonListenerUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4119962071FC90C12B51C46D /* Pods-ScanmonListener.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScanmonListener.release.xcconfig"; path = "Pods/Target Support Files/Pods-ScanmonListener/Pods-ScanmonListener.release.xcconfig"; sourceTree = "<group>"; };
+		510BB45F6FD0F0733AD42CF1 /* Pods-ScanmonListenerUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScanmonListenerUITests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ScanmonListenerUITests/Pods-ScanmonListenerUITests.debug.xcconfig"; sourceTree = "<group>"; };
+		5A7DF86F8DB0A94875E435B8 /* Pods-ScanmonListener.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScanmonListener.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ScanmonListener/Pods-ScanmonListener.debug.xcconfig"; sourceTree = "<group>"; };
+		6290D3623F2D77700050A389 /* Pods-ScanmonListenerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScanmonListenerTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ScanmonListenerTests/Pods-ScanmonListenerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		63E13932DA9CD8BC2011F2AB /* Pods_ScanmonListenerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ScanmonListenerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2CC56DBE8BC851FD2CD6D4D /* Pods-ScanmonListenerUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScanmonListenerUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ScanmonListenerUITests/Pods-ScanmonListenerUITests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +82,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D94DB10F6DC25FD83B62ACD /* Pods_ScanmonListener.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,6 +90,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D391766E20229119C0435D0 /* Pods_ScanmonListenerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,19 +98,32 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3ED6FD6D7363605F487E655B /* Pods_ScanmonListenerUITests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0F1DEB971C6D75E500146EB4 /* Docs */ = {
+			isa = PBXGroup;
+			children = (
+				0F1DEB981C6D75F400146EB4 /* README.md */,
+			);
+			name = Docs;
+			sourceTree = "<group>";
+		};
 		0FBEBA721C3194330048343D = {
 			isa = PBXGroup;
 			children = (
+				0F1DEB971C6D75E500146EB4 /* Docs */,
+				0F6CD8631C34D7FF00BC7D00 /* SMLPlayground.playground */,
 				0FBEBA7D1C3194330048343D /* ScanmonListener */,
 				0FBEBA951C3194330048343D /* ScanmonListenerTests */,
 				0FBEBAA01C3194330048343D /* ScanmonListenerUITests */,
 				0FBEBA7C1C3194330048343D /* Products */,
+				2E48ABF423129AFB9CEECF36 /* Pods */,
+				5F5EE0B8F6D0C5719ECFC84E /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -99,13 +140,19 @@
 		0FBEBA7D1C3194330048343D /* ScanmonListener */ = {
 			isa = PBXGroup;
 			children = (
+				0F3E2DF31C31E2E9002E6AFE /* SMLLogScrollView.swift */,
 				0FBEBA7E1C3194330048343D /* AppDelegate.swift */,
-				0FBEBA801C3194330048343D /* ViewController.swift */,
+				0FBEBA801C3194330048343D /* SMLViewController.swift */,
 				0FBEBA821C3194330048343D /* Main.storyboard */,
 				0FBEBA881C3194330048343D /* Assets.xcassets */,
 				0FBEBA8A1C3194330048343D /* LaunchScreen.storyboard */,
 				0FBEBA8D1C3194330048343D /* Info.plist */,
 				0FBEBA851C3194330048343D /* ScanmonListener.xcdatamodeld */,
+				0F3E2DF51C31F775002E6AFE /* SMLPlayStream.swift */,
+				0F38B7651C401229001800DE /* Defaults.plist */,
+				0F38B7671C4039A1001800DE /* Settings.bundle */,
+				0FF56E661C541D2D0058E91B /* AboutViewController.swift */,
+				0F95C4061C54413800DA3F83 /* SettingsViewController.swift */,
 			);
 			path = ScanmonListener;
 			sourceTree = "<group>";
@@ -128,6 +175,29 @@
 			path = ScanmonListenerUITests;
 			sourceTree = "<group>";
 		};
+		2E48ABF423129AFB9CEECF36 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				5A7DF86F8DB0A94875E435B8 /* Pods-ScanmonListener.debug.xcconfig */,
+				4119962071FC90C12B51C46D /* Pods-ScanmonListener.release.xcconfig */,
+				6290D3623F2D77700050A389 /* Pods-ScanmonListenerTests.debug.xcconfig */,
+				18D67C9BF0E71CF30AA3A920 /* Pods-ScanmonListenerTests.release.xcconfig */,
+				510BB45F6FD0F0733AD42CF1 /* Pods-ScanmonListenerUITests.debug.xcconfig */,
+				E2CC56DBE8BC851FD2CD6D4D /* Pods-ScanmonListenerUITests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		5F5EE0B8F6D0C5719ECFC84E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1AA08CCBD6DE93FF08628CAC /* Pods_ScanmonListener.framework */,
+				63E13932DA9CD8BC2011F2AB /* Pods_ScanmonListenerTests.framework */,
+				39F8A3B681CCD5B165110F1B /* Pods_ScanmonListenerUITests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -135,9 +205,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0FBEBAA61C3194330048343D /* Build configuration list for PBXNativeTarget "ScanmonListener" */;
 			buildPhases = (
+				F2E500A45EC1380A39711370 /* Check Pods Manifest.lock */,
 				0FBEBA771C3194330048343D /* Sources */,
 				0FBEBA781C3194330048343D /* Frameworks */,
 				0FBEBA791C3194330048343D /* Resources */,
+				6B1BCF0E50E750A730E31A16 /* Embed Pods Frameworks */,
+				20FCAA065BB3D3CDEADC35A0 /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -152,9 +225,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0FBEBAA91C3194330048343D /* Build configuration list for PBXNativeTarget "ScanmonListenerTests" */;
 			buildPhases = (
+				6E18C61377C66B61E1947A47 /* Check Pods Manifest.lock */,
 				0FBEBA8E1C3194330048343D /* Sources */,
 				0FBEBA8F1C3194330048343D /* Frameworks */,
 				0FBEBA901C3194330048343D /* Resources */,
+				3DFA5BDCC8962B30CA888157 /* Embed Pods Frameworks */,
+				70A9C524A1BD1BF2964FEF64 /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -170,9 +246,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0FBEBAAC1C3194330048343D /* Build configuration list for PBXNativeTarget "ScanmonListenerUITests" */;
 			buildPhases = (
+				D0DC000BCE5587E6CB9E946E /* Check Pods Manifest.lock */,
 				0FBEBA991C3194330048343D /* Sources */,
 				0FBEBA9A1C3194330048343D /* Frameworks */,
 				0FBEBA9B1C3194330048343D /* Resources */,
+				4F97D75ECF13279F5810C158 /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -196,6 +274,7 @@
 				TargetAttributes = {
 					0FBEBA7A1C3194330048343D = {
 						CreatedOnToolsVersion = 7.2;
+						DevelopmentTeam = 3CL8WYF3VH;
 					};
 					0FBEBA911C3194330048343D = {
 						CreatedOnToolsVersion = 7.2;
@@ -232,7 +311,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F38B7661C401229001800DE /* Defaults.plist in Resources */,
 				0FBEBA8C1C3194330048343D /* LaunchScreen.storyboard in Resources */,
+				0F38B7681C4039A1001800DE /* Settings.bundle in Resources */,
 				0FBEBA891C3194330048343D /* Assets.xcassets in Resources */,
 				0FBEBA841C3194330048343D /* Main.storyboard in Resources */,
 			);
@@ -254,14 +335,141 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		20FCAA065BB3D3CDEADC35A0 /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ScanmonListener/Pods-ScanmonListener-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3DFA5BDCC8962B30CA888157 /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ScanmonListenerTests/Pods-ScanmonListenerTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		4F97D75ECF13279F5810C158 /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ScanmonListenerUITests/Pods-ScanmonListenerUITests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6B1BCF0E50E750A730E31A16 /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ScanmonListener/Pods-ScanmonListener-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6E18C61377C66B61E1947A47 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		70A9C524A1BD1BF2964FEF64 /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ScanmonListenerTests/Pods-ScanmonListenerTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D0DC000BCE5587E6CB9E946E /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		F2E500A45EC1380A39711370 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		0FBEBA771C3194330048343D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FF56E671C541D2D0058E91B /* AboutViewController.swift in Sources */,
 				0FBEBA871C3194330048343D /* ScanmonListener.xcdatamodeld in Sources */,
-				0FBEBA811C3194330048343D /* ViewController.swift in Sources */,
+				0F95C4071C54413800DA3F83 /* SettingsViewController.swift in Sources */,
+				0FBEBA811C3194330048343D /* SMLViewController.swift in Sources */,
+				0F3E2DF41C31E2E9002E6AFE /* SMLLogScrollView.swift in Sources */,
 				0FBEBA7F1C3194330048343D /* AppDelegate.swift in Sources */,
+				0F3E2DF61C31F775002E6AFE /* SMLPlayStream.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,6 +543,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -358,6 +567,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -380,6 +590,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -396,33 +607,43 @@
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
 		0FBEBAA71C3194330048343D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5A7DF86F8DB0A94875E435B8 /* Pods-ScanmonListener.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ScanmonListener/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.greybeard.ScanmonListener;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
 		};
 		0FBEBAA81C3194330048343D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4119962071FC90C12B51C46D /* Pods-ScanmonListener.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ScanmonListener/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.greybeard.ScanmonListener;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Release;
 		};
 		0FBEBAAA1C3194330048343D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6290D3623F2D77700050A389 /* Pods-ScanmonListenerTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = ScanmonListenerTests/Info.plist;
@@ -435,6 +656,7 @@
 		};
 		0FBEBAAB1C3194330048343D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 18D67C9BF0E71CF30AA3A920 /* Pods-ScanmonListenerTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				INFOPLIST_FILE = ScanmonListenerTests/Info.plist;
@@ -447,6 +669,7 @@
 		};
 		0FBEBAAD1C3194330048343D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 510BB45F6FD0F0733AD42CF1 /* Pods-ScanmonListenerUITests.debug.xcconfig */;
 			buildSettings = {
 				INFOPLIST_FILE = ScanmonListenerUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -459,6 +682,7 @@
 		};
 		0FBEBAAE1C3194330048343D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E2CC56DBE8BC851FD2CD6D4D /* Pods-ScanmonListenerUITests.release.xcconfig */;
 			buildSettings = {
 				INFOPLIST_FILE = ScanmonListenerUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -488,6 +712,7 @@
 				0FBEBAA81C3194330048343D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0FBEBAA91C3194330048343D /* Build configuration list for PBXNativeTarget "ScanmonListenerTests" */ = {
 			isa = XCConfigurationList;
@@ -496,6 +721,7 @@
 				0FBEBAAB1C3194330048343D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0FBEBAAC1C3194330048343D /* Build configuration list for PBXNativeTarget "ScanmonListenerUITests" */ = {
 			isa = XCConfigurationList;
@@ -504,6 +730,7 @@
 				0FBEBAAE1C3194330048343D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
