@@ -24,12 +24,30 @@ enum PlayStatus: String {
 
 class SMLPlayStream: NSObject {
 
-    var _player: AVPlayer?
-    var _url: NSURL?
+    let _player: AVPlayer
+    let _url: NSURL
+    let _asset: AVURLAsset
+    let _item: AVPlayerItem
+
+    dynamic var player: AVPlayer {
+        return _player
+    }
+
+    dynamic var url: NSURL {
+        return _url
+    }
+
+    dynamic var asset: AVAsset {
+        return _asset
+    }
+
+    dynamic var item: AVPlayerItem {
+        return _item
+    }
 
     dynamic private(set) var statusRaw: String?
 
-    var status: PlayStatus = .Ready {
+    var status: PlayStatus {
         didSet {
             DDLogDebug("status set: \(status.rawValue)")
             statusRaw = status.rawValue
@@ -42,159 +60,77 @@ class SMLPlayStream: NSObject {
 
     // Private instance variables
     private var timeObserver: AnyObject?
-    let aSess = AVAudioSession.sharedInstance()
+    private let aSess: AVAudioSession
+    private weak var playerObserver: NSObject?
+    private weak var itemObserver: NSObject?
+    private weak var audioObserver: NSObject?
 
-    dynamic func audioNotification(note: NSNotification) {
-
-        DDLogDebug("audioNotification: name: '\(note.name)'")
-        let name = note.name
-
-        DDLogDebug("audioNotification: object: '\(note.object!)'")
-
-        var userInfo: [NSObject: AnyObject]
-        if note.userInfo != nil {
-            DDLogDebug("audioNotification: userinfo: '\(note.userInfo!)'")
-            userInfo = note.userInfo!
-        } else {
-            userInfo = [NSObject: AnyObject]()
-        }
-
-        if name == AVFoundation.AVAudioSessionRouteChangeNotification {
-            guard let reasonNum = userInfo[AVFoundation.AVAudioSessionRouteChangeReasonKey] as? NSNumber else {
-                DDLogError("audioNotification: ChangeReason not valid: \(userInfo["AVAudioSessionRouteChangeReasonKey"])")
-                return
-            }
-
-            guard let reason = AVAudioSessionRouteChangeReason(rawValue: UInt(reasonNum)) where reasonNum.intValue >= 0  else {
-                DDLogError("audioNotification: ChangeReason not valid")
-                return
-            }
-
-            DDLogDebug("audioNotification: reason: \(reason) (\(reason.rawValue))")
-
-            var oldRoute = "Unknown"
-            var newRoute = "Unknown"
-
-            if let oldDesc = userInfo[AVFoundation.AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription {
-                if oldDesc.outputs.count > 0 {
-                    oldRoute = oldDesc.outputs[0].portName
-                }
-            }
-
-            let newDesc = AVAudioSession.sharedInstance().currentRoute
-            if newDesc.outputs.count > 0 {
-                newRoute = newDesc.outputs[0].portName
-            }
-
-            DDLogDebug("audioNotification: route change: old: \(oldRoute), new: \(newRoute)")
-
-            // AVPlayer maybe pauses on audio route change (unplug headset, etc.)
-            DDLogDebug("audioNotification: current rate: \(_player!.rate)")
-
-            if _player!.rate == 0.0 {
-                dispatch_async(dispatch_get_main_queue(), {
-                    self.stop("Output changed")
-                })
-            }
-
-        } else if name == AVFoundation.AVPlayerItemDidPlayToEndTimeNotification ||        // Source was killed or client kicked
-            name == AVFoundation.AVPlayerItemFailedToPlayToEndTimeNotification ||   // Lost the connection?
-            name == AVFoundation.AVPlayerItemPlaybackStalledNotification {          // Network error?
-
-                // Lost the stream somehow
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.stop(note.name)
-                }
-
-        } else if name == AVFoundation.AVAudioSessionInterruptionNotification {
-
-            let tvalue = userInfo[AVAudioSessionInterruptionTypeKey] as! NSNumber
-            
-            guard let type =  AVAudioSessionInterruptionType(rawValue: UInt(tvalue)) else {
-                DDLogError("Interruption type not valid: \(userInfo[AVAudioSessionInterruptionTypeKey])")
-                return
-            }
-
-            let typeDesc: String
-            switch type {
-            case .Began:
-                typeDesc = "Began"
-            case .Ended:
-                typeDesc = "Ended"
-            }
-            DDLogInfo("Interruption type: \(typeDesc), our status: \(status.rawValue), player status: \(_player?.status.rawValue)")
-
-            switch type {
-            case .Began:
-                if status == .Playing {
-                    status = .Paused
-                }
-
-            case .Ended:
-                if let option = userInfo[AVAudioSessionInterruptionOptionKey] as? AVAudioSessionInterruptionOptions {
-                    switch option {
-                    case AVAudioSessionInterruptionOptions.ShouldResume:
-                        status = .Playing
-                        _player?.play()
-                    default:
-                        DDLogError("Unknown interruption option: \(option.rawValue)")
-                    }
-                } else {
-                    DDLogError("No options found in interruption")
-                }
-            }
-
-        } else {
-            DDLogWarn("Unhandled Notification: \(name)")
+    dynamic var playing: Bool {
+        get {
+            return status == .Playing
         }
     }
 
-    dynamic func play(url: String) -> Bool {
+    init(url: NSURL) {
+        DDLogInfo("init: \(url.absoluteString)")
+        aSess = AVAudioSession.sharedInstance()
+        _url = url
+        _asset = AVURLAsset(URL: _url)
+        _item = AVPlayerItem(asset: _asset)
+
+        _player = AVPlayer(playerItem: _item)
+
+        status = .Starting
+
+        super.init()
+
+        // Set play parameters
+        _player.actionAtItemEnd = .Pause
+
+
+        // Set observers
+        _player.addObserver(self, forKeyPath: "status", options: [.Initial, .New], context: nil)
+        playerObserver = self
+        _item.addObserver(self, forKeyPath: "timedMetadata", options: [.Initial, .New], context: nil)
+        itemObserver = self
+        timeObserver = _player.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil, usingBlock: {(time: CMTime) in
+            self.time = time.seconds
+        })
+
+
+
+    }
+
+    deinit {
+        removeObservers()
+    }
+
+    dynamic func play() -> Bool {
         var ok: Bool = false
 
-        DDLogInfo("Player starting: \(url)")
+        DDLogInfo("Player starting")
         if playing {
             stop("Restart")
         }
 
-        if let newURL = NSURL(string: url) {
-            self.url = newURL
-            DDLogInfo("Attempting to play: \(newURL)")
+        DDLogInfo("Attempting to play: \(_url.absoluteString)")
 
-            status = .Starting
+        status = .Starting
 
-            let newPlayer = AVPlayer(URL: newURL)
-            _player = newPlayer
+        do {
+            try aSess.setActive(true)
 
-            // Set play parameters
-            newPlayer.actionAtItemEnd = .Pause
+            // Set up notifications
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: aSess)
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: _item)
+            audioObserver = self
 
-
-            // Set observers
-            newPlayer.addObserver(self, forKeyPath: "status", options: [.Initial, .New], context: nil)
-            newPlayer.addObserver(self, forKeyPath: "currentItem.timedMetadata", options: [.Initial, .New], context: nil)
-            timeObserver = newPlayer.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil, usingBlock: {(time: CMTime) in
-                self.time = time.seconds
-            })
-
-            do {
-                try aSess.setActive(true)
-
-                // Set up notifications
-                NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: aSess)
-                if _player?.currentItem != nil {
-                    NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: _player!.currentItem!)
-                }
-
-                ok = true
-            }
-            catch {
-                DDLogError("Audio session set Active failed: \(error)")
-            }
-
-        } else {
-            DDLogError("Create URL failed")
+            ok = true
         }
+        catch {
+            DDLogError("Audio session set Active failed: \(error)")
+        }
+
 
         return ok
     }
@@ -204,16 +140,10 @@ class SMLPlayStream: NSObject {
         logentry = "Stopped: \(reason)"
 
         title = nil
-        _player?.pause()
-        _player?.removeObserver(self, forKeyPath: "status")
-        _player?.removeObserver(self, forKeyPath: "currentItem.timedMetadata")
-        _player?.removeTimeObserver(timeObserver!)
-        timeObserver = nil
+        _player.pause()
+        removeObservers()
 
-        // Remove notifications
-        NSNotificationCenter.defaultCenter().removeObserver(self)
-
-        _player = nil
+        //        _player = nil
         status = .Stopped
 
         do {
@@ -225,32 +155,13 @@ class SMLPlayStream: NSObject {
     }
 
     dynamic func pause() {
-        if let player = _player {
-            player.rate = 0.0
-            status = .Paused
-        }
+        player.rate = 0.0
+        status = .Paused
     }
 
     dynamic func resume() {
-        if let player = _player {
-            player.rate = 1.0
-            status = .Playing
-        }
-    }
-
-    dynamic var playing: Bool {
-        get {
-            return status == .Playing
-        }
-    }
-
-    dynamic var url: NSURL? {
-        get {
-            return _url
-        }
-
-        set(newURL) {
-        }
+        player.rate = 1.0
+        status = .Playing
     }
 
     func statusChange(changeObject: AnyObject?) -> String? {
@@ -264,7 +175,7 @@ class SMLPlayStream: NSObject {
             return "Invalid AVPlayerStatus value: '\(newStatus)'"
         }
 
-        let error: String?
+        var error: String? = nil
 
         switch status {
         case .Unknown:
@@ -272,14 +183,12 @@ class SMLPlayStream: NSObject {
 
         case .ReadyToPlay:
             DDLogInfo("status change to ReadyToPlay")
-            _player?.play()
+            _player.play()
             self.status = .Playing
-            error = nil
 
         case .Failed:
-            DDLogInfo("status change to Failed: \(_player?.error!)")
+            DDLogInfo("status change to Failed: \(_player.error!)")
             self.status = .Failed
-            error = nil
         }
 
         return error
@@ -334,26 +243,150 @@ class SMLPlayStream: NSObject {
             return
         }
 
-        guard object === _player else {
-            DDLogError("Unknown observed object '\(object!)'")
-            return
-        }
-        
         let result: String?
-        
+
         switch thisPath {
         case "status":
             result = observeChange(change, handler: statusChange)
-            
-        case "currentItem.timedMetadata":
+
+        case "timedMetadata":
             result = observeChange(change, handler: metadataChange)
-            
+
         default:
-            result = "KeyValueChange got value change for unknown key '\(thisPath)'"
-            
+            result = "KeyValueChange got value change for unknown key: '\(thisPath)'"
+
         }
         if result != nil {
             DDLogError("\(result!) for key change: \(thisPath)")
         }
     }
+
+    dynamic func audioNotification(note: NSNotification) {
+
+        DDLogDebug("audioNotification: name: '\(note.name)'")
+        let name = note.name
+
+        DDLogDebug("audioNotification: object: '\(note.object!)'")
+
+        var userInfo: [NSObject: AnyObject]
+        if note.userInfo != nil {
+            DDLogDebug("audioNotification: userinfo: '\(note.userInfo!)'")
+            userInfo = note.userInfo!
+        } else {
+            userInfo = [NSObject: AnyObject]()
+        }
+
+        switch name {
+        case AVFoundation.AVAudioSessionRouteChangeNotification:
+            guard let reasonNum = userInfo[AVFoundation.AVAudioSessionRouteChangeReasonKey] as? NSNumber else {
+                DDLogError("audioNotification: ChangeReason not valid: \(userInfo["AVAudioSessionRouteChangeReasonKey"])")
+                return
+            }
+
+            guard let reason = AVAudioSessionRouteChangeReason(rawValue: UInt(reasonNum)) where reasonNum.intValue >= 0  else {
+                DDLogError("audioNotification: ChangeReason not valid")
+                return
+            }
+
+            DDLogDebug("audioNotification: reason: \(reason) (\(reason.rawValue))")
+
+            var oldRoute = "Unknown"
+            var newRoute = "Unknown"
+
+            if let oldDesc = userInfo[AVFoundation.AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription {
+                if oldDesc.outputs.count > 0 {
+                    oldRoute = oldDesc.outputs[0].portName
+                }
+            }
+
+            let newDesc = AVAudioSession.sharedInstance().currentRoute
+            if newDesc.outputs.count > 0 {
+                newRoute = newDesc.outputs[0].portName
+            }
+
+            DDLogDebug("audioNotification: route change: old: \(oldRoute), new: \(newRoute)")
+
+            // AVPlayer maybe pauses on audio route change (unplug headset, etc.)
+            DDLogDebug("audioNotification: current rate: \(_player.rate)")
+
+            if _player.rate == 0.0 {
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.stop("Output changed")
+                })
+            }
+
+        case AVFoundation.AVPlayerItemDidPlayToEndTimeNotification:        // Source was killed or client kicked
+            fallthrough
+
+        case AVFoundation.AVPlayerItemFailedToPlayToEndTimeNotification:   // Lost the connection?
+            DDLogWarn("Detected end")
+
+        case AVFoundation.AVPlayerItemPlaybackStalledNotification:          // Network error?
+            DDLogWarn("Detected stall")
+
+        case AVFoundation.AVAudioSessionInterruptionNotification:
+
+            let tvalue = userInfo[AVAudioSessionInterruptionTypeKey] as! NSNumber
+
+            guard let type =  AVAudioSessionInterruptionType(rawValue: UInt(tvalue)) else {
+                DDLogError("Interruption type not valid: \(userInfo[AVAudioSessionInterruptionTypeKey])")
+                return
+            }
+
+            let typeDesc: String
+            switch type {
+            case .Began:
+                typeDesc = "Began"
+            case .Ended:
+                typeDesc = "Ended"
+            }
+            DDLogInfo("Interruption type: \(typeDesc), our status: \(status.rawValue), player status: \(_player.status.rawValue)")
+
+            switch type {
+            case .Began:
+                if status == .Playing {
+                    status = .Paused
+                }
+
+            case .Ended:
+                if let option = userInfo[AVAudioSessionInterruptionOptionKey] as? AVAudioSessionInterruptionOptions {
+                    switch option {
+                    case AVAudioSessionInterruptionOptions.ShouldResume:
+                        status = .Playing
+                        _player.play()
+                    default:
+                        DDLogError("Unknown interruption option: \(option.rawValue)")
+                    }
+                } else {
+                    DDLogError("No options found in interruption")
+                }
+            }
+
+        default:
+            DDLogWarn("Unhandled Notification: \(name)")
+        }
+    }
+    
+    func removeObservers() {
+        if let po = playerObserver {
+            _player.removeObserver(po, forKeyPath: "status")
+            playerObserver = nil
+        }
+        
+        if let io = itemObserver {
+            _item.removeObserver(io, forKeyPath: "timedMetadata")
+            itemObserver = nil
+        }
+        
+        if let to = timeObserver {
+            _player.removeTimeObserver(to)
+            timeObserver = nil
+        }
+        
+        if let ao = audioObserver {
+            NSNotificationCenter.defaultCenter().removeObserver(ao)
+            audioObserver = nil
+        }
+    }
+    
 }

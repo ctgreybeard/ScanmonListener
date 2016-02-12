@@ -100,7 +100,7 @@ class SMLViewController: UIViewController {
         var willStart = false
 
         if playStream == nil {
-            playStream = SMLPlayStream()
+            playStream = SMLPlayStream(url: NSURL(string: currentURL)!)
             playStream.addObserver(self, forKeyPath: "statusRaw", options: .New, context: nil)
             playStream.addObserver(self, forKeyPath: "title", options: .New, context: nil)
             playStream.addObserver(self, forKeyPath: "time", options: .New, context: nil)
@@ -109,7 +109,7 @@ class SMLViewController: UIViewController {
             do {
                 try avSession.setActive(true)
 
-                playStream.play(currentURL)
+                playStream.play()
                 willStart = true
             } catch {
                 let emsg = "Can't start audio session: \(error)"
@@ -344,7 +344,7 @@ class SMLViewController: UIViewController {
             return("Title change invalid type: '\(changeObject)'")
         }
         
-        DDLogInfo("title set: \(newTitle)")
+        DDLogInfo("title change: \(newTitle)")
 
         currentTitle.text = newTitle
 
