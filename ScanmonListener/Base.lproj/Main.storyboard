@@ -82,9 +82,10 @@
                                         <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardType="URL" returnKeyType="done" enablesReturnKeyAutomatically="YES"/>
                                         <connections>
                                             <action selector="urlAction:" destination="BYZ-38-t0r" eventType="primaryActionTriggered" id="No0-FP-sdb"/>
-                                            <action selector="urlChanged:" destination="BYZ-38-t0r" eventType="valueChanged" id="3Ra-0L-dtf"/>
-                                            <action selector="urlEditEnd:" destination="BYZ-38-t0r" eventType="editingDidEndOnExit" id="gua-Vz-al6"/>
-                                            <action selector="urlUpdated:" destination="BYZ-38-t0r" eventType="editingDidEnd" id="t3y-nh-3Ui"/>
+                                            <action selector="urlEditBegin:" destination="BYZ-38-t0r" eventType="editingDidBegin" id="sfX-GI-1jr"/>
+                                            <action selector="urlEditDidEnd:" destination="BYZ-38-t0r" eventType="editingDidEnd" id="5Zp-Gg-M9z"/>
+                                            <action selector="urlEditDidEndOnExit:" destination="BYZ-38-t0r" eventType="editingDidEndOnExit" id="dyf-pr-kBf"/>
+                                            <action selector="urlEditingChanged:" destination="BYZ-38-t0r" eventType="editingChanged" id="s1e-Nr-C82"/>
                                         </connections>
                                     </textField>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="38J-12-oIG" userLabel="PlayView">
@@ -99,6 +100,9 @@
                                                 <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                                 <state key="normal" title="Play">
                                                     <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                </state>
+                                                <state key="disabled">
+                                                    <color key="titleColor" red="0.49803921568627452" green="0.49803921568627452" blue="0.49803921568627452" alpha="1" colorSpace="calibratedRGB"/>
                                                 </state>
                                                 <connections>
                                                     <action selector="buttonTouch:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Xsh-tM-Y5s"/>
