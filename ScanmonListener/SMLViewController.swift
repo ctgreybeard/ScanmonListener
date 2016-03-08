@@ -186,7 +186,7 @@ class SMLViewController: UIViewController {
     }
 
     @IBAction func buttonTouch(sender: UIButton) {
-        DDLogDebug("Entry")
+        DDLogVerbose("Entry")
         if sender === playButton {
             if let thisTitle = sender.currentTitle {
                 if thisTitle == "Play" {
@@ -206,9 +206,9 @@ class SMLViewController: UIViewController {
                 sender.setTitle("HUH!?", forState: UIControlState.Normal)
             }
         } else if sender === settingsButton {
-
+            DDLogDebug("settingsButton touched")
         } else if sender === helpButton {
-
+            DDLogDebug("helpButton touched")
         } else {
             DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
         }
@@ -293,12 +293,26 @@ class SMLViewController: UIViewController {
 
     @IBAction func settingsReturnedOK(segue: UIStoryboardSegue) {
         DDLogInfo("Settings OK")
+        var newSet = [String]()
         let dest = segue.sourceViewController as! SettingsViewController
         let defaults = NSUserDefaults.standardUserDefaults()
-        defaults.setBool(dest.autoRetry, forKey: "autoRetry")
+
+        if dest.autoRetry != defaults.boolForKey("autoRetry") {
+            defaults.setBool(dest.autoRetry, forKey: "autoRetry")
+            newSet.append("Auto Retry: \(dest.autoRetry)")
+        }
+
+        if dest.backgroundAudio != defaults.boolForKey("backgroundAudio") {
         defaults.setBool(dest.backgroundAudio, forKey: "backgroundAudio")
+            newSet.append("Background Audio: \(dest.backgroundAudio)")
+        }
+
+        if dest.disableLock != defaults.boolForKey("disableLock") {
         defaults.setBool(dest.disableLock, forKey: "disableLock")
-        DDLogInfo("New settings: autoRetry: \(dest.autoRetry), backgroundAudio: \(dest.backgroundAudio), disableLock: \(dest.disableLock)")
+            newSet.append("Disable Lock: \(dest.disableLock)")
+        }
+
+        DDLogInfo("New settings: \(newSet.joinWithSeparator(", "))")
     }
 
     @IBAction func settingsReturnedCancel(segue: UIStoryboardSegue) {

@@ -96,9 +96,6 @@ class SMLPlayStream: NSObject {
         timeObserver = _player.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil, usingBlock: {(time: CMTime) in
             self.time = time.seconds
         })
-
-
-
     }
 
     deinit {
@@ -263,6 +260,8 @@ class SMLPlayStream: NSObject {
 
     dynamic func audioNotification(note: NSNotification) {
 
+        var reason = ""
+
         DDLogDebug("audioNotification: name: '\(note.name)'")
         let name = note.name
 
@@ -316,10 +315,27 @@ class SMLPlayStream: NSObject {
             }
 
         case AVFoundation.AVPlayerItemDidPlayToEndTimeNotification:        // Source was killed or client kicked
+            reason = "At end"
             fallthrough
 
         case AVFoundation.AVPlayerItemFailedToPlayToEndTimeNotification:   // Lost the connection?
             DDLogWarn("Detected end")
+            if let thisError = userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? NSError {
+                reason = thisError.localizedDescription
+                DDLogWarn("Error Info: \(thisError.userInfo)")
+            }
+            if NSUserDefaults.standardUserDefaults().boolForKey("autoRetry") {
+                DDLogInfo("Retrying...")
+                status = .Starting
+                logentry = "Retrying..."
+                dispatch_async(dispatch_get_main_queue()) {
+                    self.performSelector("play", withObject: nil, afterDelay: 5.0)
+                }
+            } else {
+                dispatch_async(dispatch_get_main_queue()) {
+                    self.stop(reason)
+                }
+            }
 
         case AVFoundation.AVPlayerItemPlaybackStalledNotification:          // Network error?
             DDLogWarn("Detected stall")

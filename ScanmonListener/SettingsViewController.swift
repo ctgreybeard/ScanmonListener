@@ -23,6 +23,7 @@ class SettingsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        DDLogInfo("Entry")
 
         autoRetrySwitch.on = autoRetry
 
@@ -31,25 +32,25 @@ class SettingsViewController: UIViewController {
         disableLockSwitch.on = disableLock
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
     @IBAction func switchChanged(sender: UISwitch) {
-        autoRetry = autoRetrySwitch.on
-        backgroundAudio = backgroundAudioSwitch.on
-        disableLock = disableLockSwitch.on
+        var switchName: String?
+
+        DDLogInfo("Entry")
+        if sender === autoRetrySwitch {
+            autoRetry = autoRetrySwitch.on
+            switchName = "AutoRetry"
+        } else if sender === backgroundAudioSwitch {
+            backgroundAudio = backgroundAudioSwitch.on
+            switchName = "Background Audio"
+        } else if sender === disableLockSwitch {
+            disableLock = disableLockSwitch.on
+            switchName = "Disable Lock"
+        } else {
+            DDLogError("Unknown switch setting")
+        }
+
+        if let sn = switchName {
+            DDLogInfo("Changed: \(sn): \(sender.on)")
+        }
     }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
