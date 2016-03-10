@@ -329,6 +329,7 @@ class SMLPlayStream: NSObject {
                 status = .Starting
                 logentry = "Retrying..."
                 dispatch_async(dispatch_get_main_queue()) {
+                    self.stop("Retrying")
                     self.performSelector("play", withObject: nil, afterDelay: 5.0)
                 }
             } else {
