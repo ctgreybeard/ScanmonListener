@@ -118,8 +118,8 @@ class SMLPlayStream: NSObject {
             try aSess.setActive(true)
 
             // Set up notifications
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: aSess)
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("audioNotification:"), name: nil, object: _item)
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLPlayStream.audioNotification(_:)), name: nil, object: aSess)
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLPlayStream.audioNotification(_:)), name: nil, object: _item)
             audioObserver = self
 
             ok = true
@@ -330,7 +330,7 @@ class SMLPlayStream: NSObject {
                 logentry = "Retrying..."
                 dispatch_async(dispatch_get_main_queue()) {
                     self.stop("Retrying")
-                    self.performSelector("play", withObject: nil, afterDelay: 5.0)
+                    self.performSelector(#selector(SMLPlayStream.play), withObject: nil, afterDelay: 5.0)
                 }
             } else {
                 dispatch_async(dispatch_get_main_queue()) {

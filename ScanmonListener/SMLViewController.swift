@@ -71,8 +71,8 @@ class SMLViewController: UIViewController {
         avSession = app.avSession
 
         // Register for application notifications
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidEnterBackgroundNotification, object: UIApplication.sharedApplication())
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "applicationNotification:", name: UIApplicationDidBecomeActiveNotification, object: UIApplication.sharedApplication())
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLViewController.applicationNotification(_:)), name: UIApplicationDidEnterBackgroundNotification, object: UIApplication.sharedApplication())
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLViewController.applicationNotification(_:)), name: UIApplicationDidBecomeActiveNotification, object: UIApplication.sharedApplication())
     }
 
     override func didReceiveMemoryWarning() {
@@ -210,7 +210,7 @@ class SMLViewController: UIViewController {
         } else if sender === helpButton {
             DDLogDebug("helpButton touched")
         } else {
-            DDLogError("View(\(__LINE__)): \(__FUNCTION__): Unknown button: \(sender)")
+            DDLogError("View(\(#line)): \(#function): Unknown button: \(sender)")
         }
     }
 
