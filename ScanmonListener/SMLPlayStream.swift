@@ -16,6 +16,7 @@ enum PlayStatus: String {
     case Ready = "ready"
     case Starting = "starting"
     case Playing = "playing"
+    case Retrying = "retrying"
     case Paused = "paused"
     case Stopping = "stopping"
     case Stopped = "stopped"
@@ -24,25 +25,15 @@ enum PlayStatus: String {
 
 class SMLPlayStream: NSObject {
 
-    let _player: AVPlayer
+    var _player: AVPlayer?
     let _url: NSURL
-    let _asset: AVURLAsset
-    let _item: AVPlayerItem
 
-    dynamic var player: AVPlayer {
+    dynamic var player: AVPlayer? {
         return _player
     }
 
     dynamic var url: NSURL {
         return _url
-    }
-
-    dynamic var asset: AVAsset {
-        return _asset
-    }
-
-    dynamic var item: AVPlayerItem {
-        return _item
     }
 
     dynamic private(set) var statusRaw: String?
@@ -61,9 +52,9 @@ class SMLPlayStream: NSObject {
     // Private instance variables
     private var timeObserver: AnyObject?
     private let aSess: AVAudioSession
-    private weak var playerObserver: NSObject?
-    private weak var itemObserver: NSObject?
-    private weak var audioObserver: NSObject?
+    private var playerObserver: (NSObject, NSObject)?
+    private var itemObserver: (NSObject, NSObject)?
+    private var audioObserver: (NSObject, NSObject)?
 
     dynamic var playing: Bool {
         get {
@@ -75,31 +66,55 @@ class SMLPlayStream: NSObject {
         DDLogInfo("init: \(url.absoluteString)")
         aSess = AVAudioSession.sharedInstance()
         _url = url
+
+        status = .Ready
+
+        super.init()
+    }
+
+    func getPlayer(url: NSURL) -> AVPlayer {
+        let _asset: AVURLAsset
+        let _item: AVPlayerItem
+        let _player: AVPlayer
+
+        if player != nil {
+            dropPlayer()
+        }
+
         _asset = AVURLAsset(URL: _url)
         _item = AVPlayerItem(asset: _asset)
 
         _player = AVPlayer(playerItem: _item)
-
-        status = .Starting
-
-        super.init()
-
+        self._player = _player
         // Set play parameters
         _player.actionAtItemEnd = .Pause
 
+        status = .Starting
 
         // Set observers
         _player.addObserver(self, forKeyPath: "status", options: [.Initial, .New], context: nil)
-        playerObserver = self
+        playerObserver = (self, _player)
+
         _item.addObserver(self, forKeyPath: "timedMetadata", options: [.Initial, .New], context: nil)
-        itemObserver = self
+        itemObserver = (self, _item)
+
         timeObserver = _player.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil, usingBlock: {(time: CMTime) in
             self.time = time.seconds
         })
+
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLPlayStream.audioNotification(_:)), name: nil, object: _item)
+        audioObserver = (self, _item)
+
+        return _player
+    }
+
+    func dropPlayer() {
+        removeObservers()
+        _player = nil
     }
 
     deinit {
-        removeObservers()
+        stop("Deinit")
     }
 
     dynamic func play() -> Bool {
@@ -110,6 +125,8 @@ class SMLPlayStream: NSObject {
             stop("Restart")
         }
 
+        getPlayer(_url)
+
         DDLogInfo("Attempting to play: \(_url.absoluteString)")
 
         status = .Starting
@@ -119,8 +136,6 @@ class SMLPlayStream: NSObject {
 
             // Set up notifications
             NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLPlayStream.audioNotification(_:)), name: nil, object: aSess)
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLPlayStream.audioNotification(_:)), name: nil, object: _item)
-            audioObserver = self
 
             ok = true
         }
@@ -137,8 +152,8 @@ class SMLPlayStream: NSObject {
         logentry = "Stopped: \(reason)"
 
         title = nil
-        _player.pause()
-        removeObservers()
+        player?.rate = 0.0
+        dropPlayer()
 
         //        _player = nil
         status = .Stopped
@@ -151,13 +166,20 @@ class SMLPlayStream: NSObject {
         }
     }
 
+    func retry() {
+        dropPlayer()
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(5 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+            self.play()
+        }
+    }
+
     dynamic func pause() {
-        player.rate = 0.0
+        player?.rate = 0.0
         status = .Paused
     }
 
     dynamic func resume() {
-        player.rate = 1.0
+        player?.rate = 1.0
         status = .Playing
     }
 
@@ -180,11 +202,11 @@ class SMLPlayStream: NSObject {
 
         case .ReadyToPlay:
             DDLogInfo("status change to ReadyToPlay")
-            _player.play()
+            _player!.rate = 1.0
             self.status = .Playing
 
         case .Failed:
-            DDLogInfo("status change to Failed: \(_player.error!)")
+            DDLogInfo("status change to Failed: \(_player?.error!)")
             self.status = .Failed
         }
 
@@ -306,9 +328,9 @@ class SMLPlayStream: NSObject {
             DDLogDebug("audioNotification: route change: old: \(oldRoute), new: \(newRoute)")
 
             // AVPlayer maybe pauses on audio route change (unplug headset, etc.)
-            DDLogDebug("audioNotification: current rate: \(_player.rate)")
+            DDLogDebug("audioNotification: current rate: \(_player?.rate)")
 
-            if _player.rate == 0.0 {
+            if _player?.rate == 0.0 {
                 dispatch_async(dispatch_get_main_queue(), {
                     self.stop("Output changed")
                 })
@@ -326,11 +348,10 @@ class SMLPlayStream: NSObject {
             }
             if NSUserDefaults.standardUserDefaults().boolForKey("autoRetry") {
                 DDLogInfo("Retrying...")
-                status = .Starting
+                status = .Retrying
                 logentry = "Retrying..."
                 dispatch_async(dispatch_get_main_queue()) {
-                    self.stop("Retrying")
-                    self.performSelector(#selector(SMLPlayStream.play), withObject: nil, afterDelay: 5.0)
+                    self.retry()
                 }
             } else {
                 dispatch_async(dispatch_get_main_queue()) {
@@ -357,7 +378,7 @@ class SMLPlayStream: NSObject {
             case .Ended:
                 typeDesc = "Ended"
             }
-            DDLogInfo("Interruption type: \(typeDesc), our status: \(status.rawValue), player status: \(_player.status.rawValue)")
+            DDLogInfo("Interruption type: \(typeDesc), our status: \(status.rawValue), player status: \(_player?.status.rawValue)")
 
             switch type {
             case .Began:
@@ -370,7 +391,7 @@ class SMLPlayStream: NSObject {
                     switch option {
                     case AVAudioSessionInterruptionOptions.ShouldResume:
                         status = .Playing
-                        _player.play()
+                        _player?.play()
                     default:
                         DDLogError("Unknown interruption option: \(option.rawValue)")
                     }
@@ -385,22 +406,22 @@ class SMLPlayStream: NSObject {
     }
     
     func removeObservers() {
-        if let po = playerObserver {
-            _player.removeObserver(po, forKeyPath: "status")
+        if let (po, pi) = playerObserver {
+            pi.removeObserver(po, forKeyPath: "status")
             playerObserver = nil
         }
         
-        if let io = itemObserver {
-            _item.removeObserver(io, forKeyPath: "timedMetadata")
+        if let (io, ii) = itemObserver {
+            ii.removeObserver(io, forKeyPath: "timedMetadata")
             itemObserver = nil
         }
         
         if let to = timeObserver {
-            _player.removeTimeObserver(to)
+            player?.removeTimeObserver(to)
             timeObserver = nil
         }
         
-        if let ao = audioObserver {
+        if let (ao, _) = audioObserver {
             NSNotificationCenter.defaultCenter().removeObserver(ao)
             audioObserver = nil
         }

@@ -352,6 +352,9 @@ class SMLViewController: UIViewController {
             didFail()
         case .Paused:
             msg = "Paused"
+        case .Retrying:
+            msg = "Retrying"
+            currentTitle.text = msg
         }
 
         statusMessage.text = msg
