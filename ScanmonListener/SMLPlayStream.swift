@@ -130,6 +130,7 @@ class SMLPlayStream: NSObject {
         DDLogInfo("Attempting to play: \(_url.absoluteString)")
 
         status = .Starting
+        logentry = "Starting"
 
         do {
             try aSess.setActive(true)
@@ -208,10 +209,12 @@ class SMLPlayStream: NSObject {
             DDLogInfo("status change to ReadyToPlay")
             _player!.rate = 1.0
             self.status = .Playing
+            logentry = "Playing"
 
         case .Failed:
             DDLogInfo("status change to Failed: \(_player?.error!)")
             self.status = .Failed
+            logentry = "Failed"
         }
 
         return error
