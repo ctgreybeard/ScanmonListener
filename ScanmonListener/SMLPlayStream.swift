@@ -166,9 +166,13 @@ class SMLPlayStream: NSObject {
         }
     }
 
-    func retry() {
+    func retry(why: String) {
+        DDLogInfo("Retrying...")
+        status = .Retrying
+        logentry = "Failed: \(why)"
         dropPlayer()
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(5 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+            self.logentry = "Retrying..."
             self.play()
         }
     }
@@ -280,9 +284,20 @@ class SMLPlayStream: NSObject {
         }
     }
 
-    dynamic func audioNotification(note: NSNotification) {
+    func streamFailed(reason: String) {
 
-        var reason = ""
+        if NSUserDefaults.standardUserDefaults().boolForKey("autoRetry") {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.retry(reason)
+            }
+        } else {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.stop(reason)
+            }
+        }
+    }
+
+    dynamic func audioNotification(note: NSNotification) {
 
         DDLogDebug("audioNotification: name: '\(note.name)'")
         let name = note.name
@@ -337,30 +352,20 @@ class SMLPlayStream: NSObject {
             }
 
         case AVFoundation.AVPlayerItemDidPlayToEndTimeNotification:        // Source was killed or client kicked
-            reason = "At end"
-            fallthrough
+            streamFailed("At end")
 
         case AVFoundation.AVPlayerItemFailedToPlayToEndTimeNotification:   // Lost the connection?
-            DDLogWarn("Detected end")
+            var reason = "Detected end"
+            DDLogWarn(reason)
             if let thisError = userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? NSError {
                 reason = thisError.localizedDescription
                 DDLogWarn("Error Info: \(thisError.userInfo)")
             }
-            if NSUserDefaults.standardUserDefaults().boolForKey("autoRetry") {
-                DDLogInfo("Retrying...")
-                status = .Retrying
-                logentry = "Retrying..."
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.retry()
-                }
-            } else {
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.stop(reason)
-                }
-            }
+            streamFailed(reason)
 
         case AVFoundation.AVPlayerItemPlaybackStalledNotification:          // Network error?
-            DDLogWarn("Detected stall")
+            logentry = "Detected Stall"
+            DDLogWarn(logentry!)
 
         case AVFoundation.AVAudioSessionInterruptionNotification:
 

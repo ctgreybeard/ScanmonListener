@@ -23,7 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
 
         // Initialize the date/time formatter
-        logDateFormat.dateFormat = "ddMMMyyyy hh:mm:ss.SSS"
+        logDateFormat.dateFormat = "ddMMMyyyy HH:mm:ss.SSS"
 
         // Initialize the logger
         let testLogLevel = DDLogLevel.Verbose

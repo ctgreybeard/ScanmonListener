@@ -52,7 +52,7 @@ class SMLViewController: UIViewController {
         let defaults = NSUserDefaults.standardUserDefaults()
         self.currentURL = NSURL(string: defaults.objectForKey("streamURL") as! String)
         self.currentTitle.text = idleTitle
-        self.statusLog.text = "Application started\n"
+        self.statusLog.appendLine("Application started")
         self.streamURL.text = currentURL.absoluteString
         playButton.titleLabel?.adjustsFontSizeToFitWidth = true
         playButton.titleLabel?.minimumScaleFactor = 0.5
