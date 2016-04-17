@@ -52,7 +52,6 @@ class SMLPlayStream: NSObject {
     // Private instance variables
     private var timeObserver: AnyObject?
     private let aSess: AVAudioSession
-    private var playerObserver: (NSObject, NSObject)?
     private var itemObserver: (NSObject, NSObject)?
     private var audioObserver: (NSObject, NSObject)?
 
@@ -92,15 +91,9 @@ class SMLPlayStream: NSObject {
         status = .Starting
 
         // Set observers
-        _player.addObserver(self, forKeyPath: "status", options: [.Initial, .New], context: nil)
-        playerObserver = (self, _player)
-
         _item.addObserver(self, forKeyPath: "timedMetadata", options: [.Initial, .New], context: nil)
+        _item.addObserver(self, forKeyPath: "status", options: [.Initial, .New], context: nil)
         itemObserver = (self, _item)
-
-        timeObserver = _player.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil, usingBlock: {(time: CMTime) in
-            self.time = time.seconds
-        })
 
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SMLPlayStream.audioNotification(_:)), name: nil, object: _item)
         audioObserver = (self, _item)
@@ -108,15 +101,26 @@ class SMLPlayStream: NSObject {
         return _player
     }
 
+    /**
+     Destroys the current AVPlayer instance
+     */
     func dropPlayer() {
         removeObservers()
         _player = nil
     }
 
+    /**
+     Stop the current AVPlayer before deinitializing
+     */
     deinit {
         stop("Deinit")
     }
 
+    /**
+     Begin playing the current URL
+
+     - returns: (bool) true if AVPlayer was initialized, false otherwise
+     */
     dynamic func play() -> Bool {
         var ok: Bool = false
 
@@ -148,6 +152,12 @@ class SMLPlayStream: NSObject {
         return ok
     }
 
+    /**
+     Stop the current item playing
+
+     - parameter reason: Reason description for stop request
+
+     */
     dynamic func stop(reason: String) {
         DDLogInfo("Stopping")
         logentry = "Stopped: \(reason)"
@@ -156,70 +166,99 @@ class SMLPlayStream: NSObject {
         player?.rate = 0.0
         dropPlayer()
 
-        //        _player = nil
-        status = .Stopped
-
         do {
             try AVAudioSession.sharedInstance().setActive(false)
         }
         catch {
             DDLogError("Audio session set Inactive failed: \(error)")
         }
+
+        status = .Stopped
     }
 
+    /**
+     Start the retry process
+
+     - parameter why: Reason description for Retry
+
+     Removes current AVPlayer and retries in 5 seconds
+     */
     func retry(why: String) {
         DDLogInfo("Retrying...")
-        status = .Retrying
         logentry = "Failed: \(why)"
         dropPlayer()
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(5 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
             self.logentry = "Retrying..."
             self.play()
         }
+        status = .Retrying
     }
 
+    /**
+     Pause the current player
+     */
     dynamic func pause() {
         player?.rate = 0.0
         status = .Paused
     }
 
+    /**
+     Resume the current player
+     */
     dynamic func resume() {
         player?.rate = 1.0
         status = .Playing
     }
 
+    /**
+     Respond to the current AVPlayerItem status change
+
+     - parameter changeObject: AVPlayerItemStatus object value as Int
+
+     */
     func statusChange(changeObject: AnyObject?) -> String? {
+
         guard let newStatus = changeObject as? Int else {
             return "Status change invalid type: '\(changeObject!)'"
         }
 
-        DDLogDebug("statusChange")
-
-        guard let status = AVPlayerStatus(rawValue: newStatus) else {
-            return "Invalid AVPlayerStatus value: '\(newStatus)'"
+        // Convert Int to AVPlayerItemStatus
+        guard let itemStatus = AVPlayerItemStatus(rawValue: newStatus) else {
+            return "Invalid AVPlayerItemStatus value: '\(newStatus)'"
         }
 
         var error: String? = nil
 
-        switch status {
+        DDLogDebug("Status change")
+
+        switch itemStatus {
         case .Unknown:
             error = "Status change to 'Unknown'"
 
         case .ReadyToPlay:
             DDLogInfo("status change to ReadyToPlay")
             _player!.rate = 1.0
-            self.status = .Playing
+            timeObserver = self._player!.addPeriodicTimeObserverForInterval(CMTime(seconds: 1.0, preferredTimescale: 1), queue: nil) {
+                (time: CMTime) in self.time = time.seconds
+            }
             logentry = "Playing"
+            status = .Playing
 
         case .Failed:
-            DDLogInfo("status change to Failed: \(_player?.error!)")
-            self.status = .Failed
-            logentry = "Failed"
+            DDLogInfo("status change to Failed: \(_player?.currentItem?.error!)")
+            let failMsg = _player?.currentItem?.error?.localizedDescription ?? "Unknown"
+            logentry = "Failed: \(failMsg)"
+            status = .Failed
         }
 
         return error
     }
 
+    /**
+     Parse metadataChange and set self.title if the title is found
+
+     - parameter changeObject: AVMetaDataItem object
+     */
     func metadataChange(changeObject: AnyObject?) -> String? {
         guard let data = changeObject as? [AVMetadataItem] else {
             return "Metadata change invalid type: '\(changeObject!)'"
@@ -240,6 +279,15 @@ class SMLPlayStream: NSObject {
         return nil
     }
 
+    /**
+    Parse change dictionary and pass New change object to the designated handler
+
+    - parameters:
+
+        - change: Supplied change dictionary
+
+        - handler: Designated change handler
+     */
     func observeChange(change: [String : AnyObject]?, handler: (AnyObject?) -> String?) -> String? {
 
         guard let changeDict = change else {
@@ -282,6 +330,7 @@ class SMLPlayStream: NSObject {
             result = "KeyValueChange got value change for unknown key: '\(thisPath)'"
 
         }
+
         if result != nil {
             DDLogError("\(result!) for key change: \(thisPath)")
         }
@@ -407,20 +456,16 @@ class SMLPlayStream: NSObject {
                     DDLogError("No options found in interruption")
                 }
             }
-
+            
         default:
             DDLogWarn("Unhandled Notification: \(name)")
         }
     }
     
     func removeObservers() {
-        if let (po, pi) = playerObserver {
-            pi.removeObserver(po, forKeyPath: "status")
-            playerObserver = nil
-        }
-        
         if let (io, ii) = itemObserver {
             ii.removeObserver(io, forKeyPath: "timedMetadata")
+            ii.removeObserver(io, forKeyPath: "status")
             itemObserver = nil
         }
         
