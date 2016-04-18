@@ -57,7 +57,6 @@ class SMLLogScrollView: UITextView {
         // Scroll to bottom line
 
         let seeMe = CGRectMake(0.0, contentSize.height - 5.0, 1.0, 1.0)
-        DDLogDebug("Bounds: \(bounds), size: \(contentSize), seeMe: \(seeMe)")
         scrollRectToVisible(seeMe, animated: true)
     }
     
