@@ -23,7 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
 
         // Initialize the date/time formatter
-        logDateFormat.dateFormat = "ddMMMyyyy hh:mm:ss.SSS"
+        logDateFormat.dateFormat = "ddMMMyyyy HH:mm:ss.SSS"
 
         // Initialize the logger
         let testLogLevel = DDLogLevel.Verbose
@@ -43,7 +43,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, DDLogFormatter {
         DDTTYLogger.sharedInstance().setForegroundColor(infoColor, backgroundColor: nil, forFlag: DDLogFlag.Info)
 
         loadPrefs()
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "defaultsChanged:", name: nil, object: preferences)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(AppDelegate.defaultsChanged(_:)), name: nil, object: preferences)
 
         DDLogDebug("default for backgroundAudio: \(preferences.boolForKey("backgroundAudio"))")
 
